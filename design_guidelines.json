@@ -1,0 +1,94 @@
+{
+  "theme": "light",
+  "archetype": "Archetype 4 (Swiss & High-Contrast) + Custom Premium Accent",
+  "colors": {
+    "primary_accent": "#FF5A1F",
+    "primary_accent_hover": "#E04812",
+    "background_main": "#F8F9FA",
+    "background_surface": "#FFFFFF",
+    "navbar_bg": "#0A0A0A",
+    "navbar_text": "#F8F9FA",
+    "navbar_border": "rgba(255,255,255,0.1)",
+    "text_main": "#111827",
+    "text_muted": "#6B7280",
+    "border_light": "#E5E7EB",
+    "error": "#EF4444",
+    "success": "#10B981"
+  },
+  "typography": {
+    "fonts": {
+      "headings": "General Sans",
+      "body": "Satoshi",
+      "mono": "JetBrains Mono"
+    },
+    "rules": [
+      "NO Inter, Roboto, or generic fonts.",
+      "Headlines (H1/H2) MUST use tight letter spacing: tracking-tight or tracking-tighter.",
+      "Never default to generic bold; use font-medium or font-semibold for crispness.",
+      "Overlines and small badges should be uppercase with wide tracking: tracking-[0.2em] text-xs font-semibold."
+    ],
+    "scale": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-none",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight leading-tight",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "body": "text-base leading-relaxed text-gray-700",
+      "small": "text-sm text-gray-500"
+    }
+  },
+  "layout_spacing": {
+    "padding_scale": "Use p-6, p-8, p-12 generously for containers. Cards must have internal padding of p-6.",
+    "border_radius": {
+      "cards": "rounded-2xl",
+      "buttons": "rounded-full",
+      "inputs": "rounded-xl"
+    },
+    "shadows": {
+      "default": "shadow-[0_4px_24px_rgba(0,0,0,0.03)]",
+      "hover": "shadow-[0_12px_32px_rgba(0,0,0,0.08)]",
+      "glass": "shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
+    },
+    "grid_system": "Bento Grid Protocol. Use grid-cols-1 md:grid-cols-2 lg:grid-cols-3 or lg:grid-cols-4 for listing grids. Gap strategy: gap-6 to gap-8."
+  },
+  "components": {
+    "navbar": "Solid #0A0A0A background (not transparent). Sticky top with z-50. White/light gray text for links. Subtle bottom border border-white/10.",
+    "cards": "Flat #FFFFFF background. 1px border-gray-100. Hover: -translate-y-1, increased shadow, border-accent/20. No internal scrollbars.",
+    "buttons": "Primary CTA: bg-[#FF5A1F] text-white rounded-full px-6 py-3 font-medium transition-all hover:bg-[#E04812] hover:shadow-lg. Secondary: bg-white text-gray-900 border border-gray-200 rounded-full hover:bg-gray-50.",
+    "inputs": "Shadcn based. bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#FF5A1F]/20 focus:border-[#FF5A1F] transition-all.",
+    "empty_state": "High-impact visual. Large illustration, centered text, secondary color text-gray-500, primary CTA to 'Create Listing'. Generous top/bottom padding (py-24).",
+    "drag_drop_zone": "Dashed border border-2 border-gray-300 rounded-2xl bg-gray-50 hover:bg-gray-100 hover:border-[#FF5A1F] transition-all flex flex-col items-center justify-center p-12.",
+    "loading_skeletons": "Pulse effect using bg-gray-200. Must match the exact geometry (rounded-2xl) of the content they replace."
+  },
+  "motion_interactions": [
+    "Framer Motion for page transitions: initial={opacity: 0, y: 10} animate={opacity: 1, y: 0} transition={duration: 0.3}",
+    "Staggered entrance for marketplace listings grid (staggerChildren: 0.1).",
+    "Button clicks: tap={scale: 0.98}",
+    "All interactive elements MUST have visible hover and focus states (focus:ring)."
+  ],
+  "accessibility_testing": [
+    "All interactive elements MUST include a data-testid attribute (e.g., data-testid='login-button', data-testid='create-listing-submit').",
+    "Use color-contrast checking for the orange accent against white backgrounds.",
+    "Include aria-labels for icon-only buttons (like the user profile dropdown)."
+  ],
+  "media_assets": {
+    "login_background": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/a3285b10-36bd-49b9-9338-07c91fd858fa/images/b77aff55ea914c4f992eef78f2c28f73336bbfed7b3d375cd9d4003fde9f5168.png",
+      "description": "High-end abstract architectural rendering of a modern university campus building at dusk with orange accents. Use for the split-screen Auth page background."
+    },
+    "empty_state_illustration": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/a3285b10-36bd-49b9-9338-07c91fd858fa/images/ec66d9bbcab4b5490808ebc7ecf2f0f8649d94b6c2ae26067ab4da8d2de56103.png",
+      "description": "Minimalist 3D illustration of an empty premium cardboard box and floating tag. Use for the main marketplace 'No Listings' empty state."
+    },
+    "placeholder_lifestyle_1": {
+      "url": "https://images.unsplash.com/photo-1763890869739-b1f0a5d3de2f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwxfHxzdHVkZW50JTIwbGlmZXN0eWxlJTIwY2FtcHVzJTIwbWluaW1hbHxlbnwwfHx8fDE3NzkwNDY0ODl8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Alternative campus lifestyle image for hero banners or profile placeholders."
+    }
+  },
+  "instructions_to_main_agent": [
+    "START WITH EMPTY STATE: The platform must start completely empty. Do NOT insert any fake or dummy marketplace listings. The empty state UI MUST look premium using the provided empty_state_illustration url.",
+    "FIREBASE REAL-TIME: Listings must be bound to Firestore onSnapshot listeners so new items appear instantly in the UI.",
+    "COMPONENTS: Heavily customize Shadcn components. Remove the 'Vercel-look'. Make inputs rounded-xl and cards rounded-2xl with very soft shadows.",
+    "ICONS: Install and use lucide-react or @phosphor-icons/react. Keep icons consistent.",
+    "TEST IDS: Add data-testid to EVERY button, input, form, and link. CRITICAL for validation.",
+    "NAVBAR: Implement a dark navbar (#0A0A0A) as requested by the user, contrasting with the light gray (#F8F9FA) page background."
+  ]
+}

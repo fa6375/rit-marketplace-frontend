@@ -1,0 +1,52 @@
+{
+  "summary": "Frontend-only review of Marketplace (React + Firebase). Tested auth flows up to the email verification gate. 10/11 critical checks PASS. Confirmed via grep that no seed/sample/mock listing data exists anywhere in the codebase; Dashboard fetches strictly from Firestore via onSnapshot.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "Invalid login error toast",
+        "issue": "Could not deterministically assert 'Invalid email or password' toast in automated run because a prior 'Welcome back' success toast from the immediately-preceding successful re-login was still visible in the toaster when the new error toast appeared. Firebase did return a 400 (auth/invalid-credential) for the bad-creds attempt, and the AuthPage error handler correctly maps that code to 'Invalid email or password' (AuthPage.jsx lines 49-50). The mapping itself is correct in code; this is a test-timing observation, not a functional bug.",
+        "affected_selectors": ["[data-sonner-toast]"]
+      }
+    ],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Low priority: In AuthPage.jsx lines 19-25, navigate() is called during render which triggers the React warning: 'Cannot update a component (BrowserRouter) while rendering a different component (AuthPage)'. Wrap the auto-redirect in a useEffect to silence the warning and avoid potential state-update-during-render issues.",
+    "Optional: Auth success toast 'Welcome back' fires on login even when the user is unverified and will be redirected to /verify-email. Consider suppressing the success toast in that case to avoid confusing UX."
+  ],
+  "critical_code_review_comments": [
+    "AuthPage.jsx (lines 19-25): navigate() called during render. Move into useEffect. Produces console error 'Cannot update a component while rendering a different component'.",
+    "No backend (FastAPI) in use; entire data layer is Firebase. Firebase apiKey is intentionally public per Firebase design, so the hardcoded config in firebase.js is acceptable.",
+    "Dashboard.jsx correctly uses onSnapshot with orderBy('createdAt','desc') and handles loading/error states. Empty-state behavior is correct (renders EmptyState only when listings array is empty post-fetch). No seed data anywhere.",
+    "ProtectedRoute.jsx correctly enforces both auth and emailVerified, redirecting unverified users to /verify-email.",
+    "VerifyEmail.jsx polls auth.currentUser.reload() every 4s which is reasonable, and the resend cooldown timer is implemented correctly (45s)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (no backend)", "frontend": "10/11 critical checks PASS (~91%)"},
+  "test_credentials": "Fresh signup per run: teststudent_<unix_ts>@gmail.com / Test1234!. Confirmed working signup: teststudent_1779047106@gmail.com (used during this iteration).",
+  "seed_data_creation": "None. Codebase grep for 'seed|mock|sample|fake|dummy|addDoc.*listings|setDoc.*listings' confirms zero seed listing data. The only addDoc on 'listings' collection is inside CreateListing.jsx (user-triggered form submit).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Firebase is fully reachable from the preview origin (student-bazaar-15.preview.emergentagent.com). All identitytoolkit.googleapis.com requests returned 200. Firestore Listen/Write channels are open. Email verification cannot be auto-completed in CI; tests should stop at the /verify-email gate. All required data-testids are present on AuthPage, VerifyEmail, Dashboard, and EmptyState. The single observed React console warning ('setState during render') originates from AuthPage's render-time navigate() call and is harmless but should be fixed.",
+  "passed_checks": [
+    "App loads at /login with no white screen, no page errors",
+    "Split-screen UI renders correctly (left visual + right form)",
+    "data-testid='auth-submit-btn', auth-email-input, auth-password-input present",
+    "Toggle via auth-toggle-mode-btn shows/hides signup-name-input correctly",
+    "Signup with fresh email succeeds via Firebase (200 from identitytoolkit accounts:signUp) and redirects to /verify-email",
+    "verify-email-card visible and contains the user's email",
+    "Visiting / while unverified redirects to /verify-email (ProtectedRoute works)",
+    "verify-resend-btn triggers 'Verification email sent' toast AND cooldown text changes to 'Resend in 43s'",
+    "verify-logout-btn signs out and returns to /login",
+    "Re-login with same unverified credentials re-routes to /verify-email",
+    "Mobile 375x800 renders /login with no horizontal scroll",
+    "Codebase contains NO fake/sample/mock/seed listings; Dashboard uses onSnapshot on 'listings' collection only"
+  ],
+  "rca of the issue": "N/A — no functional issues. Only one cosmetic React warning (setState during render) in AuthPage."
+}
