@@ -47,7 +47,7 @@ export const Footer = () => {
           <div className="mt-5 space-y-4">
             {[
               {
-                name: 'Aliyev Faraj',
+                name: 'Faraj Aliyev',
                 role: 'Founder',
                 email: 'fa6375@rit.edu',
               },
@@ -59,7 +59,7 @@ export const Footer = () => {
               {
                 name: 'Fran Brezanin',
                 role: 'Co-Founder',
-                email: 'fb1060@g.rit.edu',
+                email: 'fb1060@rit.edu',
               },
             ].map((member) => (
               <div
