@@ -59,7 +59,7 @@ export const Footer = () => {
               {
                 name: 'Fran Brezanin',
                 role: 'Co-Founder',
-                email: 'fb1060@rit.eduUU',
+                email: 'fb1060@rit.edu',
               },
             ].map((member) => (
               <div
