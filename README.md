@@ -1,70 +1,114 @@
-# Getting Started with Create React App
+# RIT Marketplace
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+RIT Marketplace is a student-focused online marketplace designed for the RIT Croatia community. The platform allows students to buy, sell, and discover items in a secure and organized environment tailored specifically to campus life.
 
-## Available Scripts
+## Overview
 
-In the project directory, you can run:
+Finding buyers and sellers through group chats and social media can be frustrating and inefficient. RIT Marketplace provides a centralized platform where students can list items, browse available products, and connect with other members of the RIT community.
 
-### `npm start`
+Whether you are selling textbooks after a semester, looking for affordable electronics, or searching for furniture before moving into a new apartment, RIT Marketplace makes the process simple and accessible.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+* User authentication
+* Create, edit, and manage listings
+* Browse marketplace categories
+* Search available listings
+* Upload product images
+* Responsive design for desktop and mobile devices
+* Secure data storage using Firebase
+* Real-time database integration
 
-### `npm test`
+## Technology Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Frontend
 
-### `npm run build`
+* React
+* Tailwind CSS
+* CRACO
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Backend Services
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+* Firebase Authentication
+* Firestore Database
+* Firebase Storage
 
 ### Deployment
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+* Vercel
 
-### `npm run build` fails to minify
+## Live Website
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+https://rit-marketplace.xyz
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/fa6375/rit-marketplace-frontend.git
+```
+
+Navigate to the project directory:
+
+```bash
+cd rit-marketplace-frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm start
+```
+
+Build for production:
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+```text
+src/
+├── components/
+├── pages/
+├── services/
+├── hooks/
+├── assets/
+
+public/
+├── images/
+├── icons/
+```
+
+## Future Development
+
+Planned features include:
+
+* Favorites and wishlist system
+* In-app messaging
+* Seller ratings and reviews
+* Advanced search and filtering
+* Mobile application support
+* Push notifications
+* Listing analytics
+* Student verification system
+
+## Contributing
+
+Suggestions, bug reports, and feature requests are welcome. If you would like to contribute to the project, feel free to open an issue or submit a pull request.
+
+## Author
+
+Faraj Aliyev
+
+## License
+
+This project was developed for educational and community purposes within RIT Croatia.
