@@ -11,7 +11,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
-  const { login, signup, forgotPassword, user } = useAuth();
+  const { login, signup, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirect = location.state?.from?.pathname || "/";
@@ -24,20 +24,6 @@ export default function AuthPage() {
       navigate(redirect, { replace: true });
     }
   }, [user, navigate, redirect]);
-
-
-  const handleForgotPassword = async () => {
-    if (!email.trim()) {
-      toast.error("Enter your email first");
-      return;
-    }
-    try {
-      await forgotPassword(email.trim());
-      toast.success("Password reset email sent.");
-    } catch (err) {
-      toast.error(err?.message || "Unable to send reset email");
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -214,8 +200,7 @@ export default function AuthPage() {
                     </>
                   )}
                 </motion.button>
-              {mode === "login" && (<button type="button" onClick={handleForgotPassword} className="text-sm text-[#FF5A1F] hover:underline mt-2">Forgot password?</button>)}
-</form>
+              </form>
 
               <p className="text-sm text-gray-500 mt-6 text-center">
                 {mode === "login" ? "New here?" : "Already have an account?"}{" "}
