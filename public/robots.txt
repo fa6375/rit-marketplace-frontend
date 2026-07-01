@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://rit-marketplace.xyz/sitemap.xml

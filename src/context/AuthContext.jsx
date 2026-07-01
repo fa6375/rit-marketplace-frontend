@@ -6,6 +6,7 @@ import {
   sendEmailVerification,
   onAuthStateChanged,
   updateProfile,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
@@ -66,6 +67,8 @@ export const AuthProvider = ({ children }) => {
     return cred.user;
   };
 
+  const forgotPassword = (email) => sendPasswordResetEmail(auth, email);
+
   const logout = () => signOut(auth);
 
   const resendVerification = async () => {
@@ -84,6 +87,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     signup,
     login,
+    forgotPassword,
     logout,
     resendVerification,
     refreshUser,
