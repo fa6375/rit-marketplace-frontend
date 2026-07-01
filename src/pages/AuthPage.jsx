@@ -156,7 +156,7 @@ export default function AuthPage() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@university.edu"
+                      placeholder="you@youremail.com"
                       required
                       autoComplete="email"
                       data-testid="auth-email-input"
