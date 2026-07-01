@@ -1,0 +1,2 @@
+import React from 'react';
+export default function MaintenancePage(){return(<div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#090909',color:'#fff'}}><div style={{padding:50,borderRadius:24,background:'rgba(255,255,255,.06)',textAlign:'center'}}><div style={{fontSize:60}}>🐾</div><h1>Something <span style={{color:'#F76902'}}>exciting</span> is coming.</h1><p>RIT Marketplace is temporarily under maintenance.</p></div></div>)}

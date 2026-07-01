@@ -1,3 +1,5 @@
+import { maintenanceMode } from './maintenanceConfig';
+import MaintenancePage from './MaintenancePage';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
@@ -23,6 +25,8 @@ const Shell = ({ children }) => (
 );
 
 function App() {
+ if(maintenanceMode) return <MaintenancePage/>;
+
   return (
     <AuthProvider>
       <BrowserRouter>
