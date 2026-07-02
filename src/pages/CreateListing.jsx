@@ -18,7 +18,7 @@ import {
 import { db, storage } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
 import { DragDropImage } from "../components/DragDropImage";
-import { CATEGORIES } from "../lib/categories";
+import { useCategories } from "../hooks/useCategories";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -27,11 +27,12 @@ export default function CreateListing({ editMode = false }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { id } = useParams();
+  const { categories } = useCategories();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[0].id);
+  const [category, setCategory] = useState("");
   const [contact, setContact] = useState("");
   const [image, setImage] = useState(null);
   const [existingImage, setExistingImage] = useState(null);
@@ -58,7 +59,7 @@ export default function CreateListing({ editMode = false }) {
         setTitle(data.title || "");
         setDescription(data.description || "");
         setPrice(String(data.price ?? ""));
-        setCategory(data.category || CATEGORIES[0].id);
+        setCategory(data.category || "");
         setContact(data.contact || "");
         setExistingImage(data.imageUrl || null);
         setExistingImagePath(data.imagePath || null);
@@ -69,6 +70,8 @@ export default function CreateListing({ editMode = false }) {
       }
     })();
   }, [editMode, id, user, navigate]);
+
+  useEffect(() => { if (!category && categories.length) setCategory(categories[0].id); }, [categories, category]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -227,9 +230,9 @@ export default function CreateListing({ editMode = false }) {
             data-testid="create-category-select"
             className={`${inputCls} appearance-none`}
           >
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.label}
+                {c.name || c.label}
               </option>
             ))}
           </select>

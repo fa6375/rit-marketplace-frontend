@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { Store, Loader2, ArrowRight, Mail, Lock, User } from "lucide-react";
 import { toast } from "sonner";
 
@@ -11,7 +12,7 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
-  const { login, signup, forgotPassword, user } = useAuth();
+  const { login, signup, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirect = location.state?.from?.pathname || "/";
@@ -28,14 +29,14 @@ export default function AuthPage() {
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      toast.error("Enter your email first");
+      toast.error("Please enter your email address first.");
       return;
     }
     try {
-      await forgotPassword(email.trim());
-      toast.success("Password reset email sent.");
+      await sendPasswordResetEmail(getAuth(), email.trim());
+      toast.success("Password reset email sent. Check your inbox.");
     } catch (err) {
-      toast.error(err?.message || "Unable to send reset email");
+      toast.error(err?.message || "Failed to send reset email.");
     }
   };
 
@@ -197,6 +198,7 @@ export default function AuthPage() {
                     />
                   </div>
                 </div>
+{mode === "login" && <div className="text-right mt-2"><button type="button" onClick={handleForgotPassword} className="text-sm text-[#FF5A1F] hover:underline">Forgot password?</button></div>}
 
                 <motion.button
                   whileTap={{ scale: 0.98 }}
@@ -214,8 +216,7 @@ export default function AuthPage() {
                     </>
                   )}
                 </motion.button>
-              {mode === "login" && (<button type="button" onClick={handleForgotPassword} className="text-sm text-[#FF5A1F] hover:underline mt-2">Forgot password?</button>)}
-</form>
+              </form>
 
               <p className="text-sm text-gray-500 mt-6 text-center">
                 {mode === "login" ? "New here?" : "Already have an account?"}{" "}

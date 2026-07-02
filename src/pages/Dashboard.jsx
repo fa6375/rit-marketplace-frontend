@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { CATEGORIES } from "../lib/categories";
+import { useCategories } from "../hooks/useCategories";
 import { ListingCard } from "../components/ListingCard";
 import { EmptyState } from "../components/EmptyState";
 import { ListingSkeletonGrid } from "../components/ListingSkeleton";
@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const { categories } = useCategories();
 
   useEffect(() => {
     const q = query(collection(db, "listings"), orderBy("createdAt", "desc"));
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
     return listings.filter((l) => {
+      if (l.hidden) return false;
       if (activeCategory !== "all" && l.category !== activeCategory) return false;
       if (!s) return true;
       return (
@@ -97,7 +99,7 @@ export default function Dashboard() {
           >
             All
           </CategoryPill>
-          {CATEGORIES.map((c) => {
+          {categories.map((c) => {
             const Icon = c.icon;
             return (
               <CategoryPill
@@ -106,8 +108,8 @@ export default function Dashboard() {
                 onClick={() => setActiveCategory(c.id)}
                 testId={`category-pill-${c.id}`}
               >
-                <Icon className="w-3.5 h-3.5" />
-                {c.label}
+                {Icon && <Icon className="w-3.5 h-3.5" />}
+                {c.name || c.label}
               </CategoryPill>
             );
           })}
@@ -131,7 +133,7 @@ export default function Dashboard() {
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             data-testid="listings-grid"
           >
-            {filtered.map((l, i) => (
+            {[...filtered].sort((a,b) => Number(b.featured)-Number(a.featured)).map((l, i) => (
               <ListingCard key={l.id} listing={l} index={i} />
             ))}
           </div>

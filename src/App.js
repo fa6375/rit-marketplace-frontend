@@ -1,5 +1,3 @@
-import { maintenanceMode } from './maintenanceConfig';
-import MaintenancePage from './MaintenancePage';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
@@ -14,6 +12,10 @@ import CreateListing from "./pages/CreateListing";
 import ListingDetails from "./pages/ListingDetails";
 import MyListings from "./pages/MyListings";
 import AccountSettings from "./pages/AccountSettings";
+import { MaintenanceGate } from "./components/MaintenanceGate";
+import { AdminRoute } from "./components/AdminRoute";
+import AdminLayout from "./components/admin/AdminLayout";
+import { AdminDashboard, ListingsManager, UsersManager, ReportsManager, CategoriesManager, WebsiteSettings, MaintenanceManager, Analytics, AdminLogs } from "./pages/admin/AdminPages";
 import "@/App.css";
 
 const Shell = ({ children }) => (
@@ -25,8 +27,6 @@ const Shell = ({ children }) => (
 );
 
 function App() {
- if(maintenanceMode) return <MaintenancePage/>;
-
   return (
     <AuthProvider>
       <BrowserRouter>
@@ -37,7 +37,7 @@ function App() {
             style: { borderRadius: "12px", fontFamily: "inherit" },
           }}
         />
-        <Routes>
+        <MaintenanceGate><Routes>
           <Route path="/login" element={<AuthPage />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
 
@@ -101,8 +101,20 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="listings" element={<ListingsManager />} />
+            <Route path="users" element={<UsersManager />} />
+            <Route path="reports" element={<ReportsManager />} />
+            <Route path="categories" element={<CategoriesManager />} />
+            <Route path="settings" element={<WebsiteSettings />} />
+            <Route path="maintenance" element={<MaintenanceManager />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="logs" element={<AdminLogs />} />
+          </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        </Routes></MaintenanceGate>
       </BrowserRouter>
     </AuthProvider>
   );

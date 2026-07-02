@@ -112,3 +112,20 @@ Faraj Aliyev
 ## License
 
 This project was developed for educational and community purposes within RIT Croatia.
+
+## Admin deployment
+
+The protected admin console is available at `/admin`. To bootstrap the first
+administrator, set `role` to `admin` on that account's `users/{uid}` Firestore
+document. Further role changes can then be made from Admin → Users.
+
+```bash
+npm ci
+npm run build
+cd functions && npm install && cd ..
+firebase deploy
+```
+
+This deploys the web app, Firestore and Storage rules, and the secure callable
+function used to delete Firebase Authentication accounts. Settings, categories,
+maintenance mode, reports, and audit logs update live from Firestore.

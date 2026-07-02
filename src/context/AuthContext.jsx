@@ -6,9 +6,8 @@ import {
   sendEmailVerification,
   onAuthStateChanged,
   updateProfile,
-  sendPasswordResetEmail,
 } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 
 const AuthContext = createContext(null);
@@ -18,6 +17,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -29,11 +29,19 @@ export const AuthProvider = ({ children }) => {
         setUser(auth.currentUser);
       } else {
         setUser(null);
+        setProfile(null);
       }
       setLoading(false);
     });
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    return onSnapshot(doc(db, "users", user.uid), (snap) => {
+      setProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+    });
+  }, [user?.uid]);
 
   const ensureUserDoc = async (u, extra = {}) => {
     const ref = doc(db, "users", u.uid);
@@ -44,6 +52,8 @@ export const AuthProvider = ({ children }) => {
         email: u.email,
         displayName: extra.displayName || u.displayName || "",
         photoURL: u.photoURL || "",
+        role: "user",
+        status: "active",
         createdAt: serverTimestamp(),
       });
     }
@@ -67,8 +77,6 @@ export const AuthProvider = ({ children }) => {
     return cred.user;
   };
 
-  const forgotPassword = (email) => sendPasswordResetEmail(auth, email);
-
   const logout = () => signOut(auth);
 
   const resendVerification = async () => {
@@ -84,10 +92,11 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    profile,
+    isAdmin: profile?.role === "admin",
     loading,
     signup,
     login,
-    forgotPassword,
     logout,
     resendVerification,
     refreshUser,

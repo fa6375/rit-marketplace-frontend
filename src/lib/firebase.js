@@ -6,6 +6,7 @@ import {
 } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDtzn2tyWXMkINxNGXN1neMoM7zfzWT4o8",
@@ -24,5 +25,6 @@ setPersistence(auth, browserLocalPersistence).catch(() => {});
 
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app);
 
 export default app;

@@ -2,29 +2,55 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    // Users can read/write only their own user document
-    match /users/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update, delete: if request.auth != null && request.auth.uid == userId;
+    function signedIn() { return request.auth != null; }
+    function isOwner(id) { return signedIn() && request.auth.uid == id; }
+    function isAdmin() {
+      return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
-    // Listings: anyone authenticated can read; only verified users can create;
-    // only the owner can update/delete their own listings.
-    match /listings/{listingId} {
-      allow read: if request.auth != null;
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && request.resource.data.role == "user";
+      allow update: if isAdmin() || (isOwner(userId)
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status);
+      allow delete: if isAdmin();
+    }
 
-      allow create: if request.auth != null
-        && request.auth.token.email_verified == true
+    match /listings/{listingId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.token.email_verified == true
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.title is string
         && request.resource.data.description is string
         && request.resource.data.price is number
         && request.resource.data.category is string;
+      allow update: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          "title", "description", "price", "category", "contact", "imageUrl",
+          "imagePath", "updatedAt", "ownerEmail", "ownerName"
+        ]));
+      allow delete: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
+    }
 
-      allow update, delete: if request.auth != null
-        && resource.data.ownerId == request.auth.uid;
+    match /categories/{categoryId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /settings/{settingId} {
+      allow read: if settingId == "maintenance" || signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /reports/{reportId} {
+      allow read, update, delete: if isAdmin();
+      allow create: if signedIn() && request.resource.data.reporterId == request.auth.uid;
+    }
+
+    match /adminLogs/{logId} {
+      allow read, create: if isAdmin();
+      allow update, delete: if false;
     }
   }
 }
