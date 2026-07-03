@@ -208,7 +208,7 @@ export default function CreateListing({ editMode = false }) {
               className={inputCls}
             />
           </Field>
-          <Field label="Price (USD)" required>
+          <Field label="Price (EUR)" required>
             <input
               type="number"
               min="0"

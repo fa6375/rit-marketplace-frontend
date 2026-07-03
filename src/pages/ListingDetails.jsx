@@ -149,7 +149,7 @@ export default function ListingDetails() {
             className="text-3xl font-semibold text-[#FF5A1F] mt-4"
             data-testid="details-price"
           >
-            ${Number(listing.price).toLocaleString()}
+            {Number(listing.price).toLocaleString()} €
           </p>
           <div className="mt-6 bg-white rounded-2xl border border-gray-100 p-5">
             <h3 className="text-xs uppercase tracking-wider font-semibold text-gray-500">

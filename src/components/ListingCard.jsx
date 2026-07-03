@@ -43,7 +43,7 @@ export const ListingCard = ({ listing, index = 0 }) => {
               className="text-[#FF5A1F] font-semibold text-base whitespace-nowrap"
               data-testid={`listing-price-${listing.id}`}
             >
-              ${Number(listing.price).toLocaleString()}
+              €{Number(listing.price).toLocaleString()}
             </span>
           </div>
           <p className="text-sm text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
