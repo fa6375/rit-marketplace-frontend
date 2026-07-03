@@ -137,7 +137,7 @@ export function CategoriesManager(){
 const settingsFields=[
   ['websiteName','Website name','RIT Marketplace','Shown in the navbar, footer and browser tab.'],
   ['homepageHeroText','Homepage hero text','Discover student listings.','The big headline on the homepage.'],
-  ['announcement','Announcement banner','','Shown as a banner under the navbar for all users. Leave empty to hide.'],
+  ['announcement','Announcement banner','','Overrides the personalized greeting banner under the navbar. Leave empty to show the greeting + rotating quotes.'],
   ['supportEmail','Support email','support@example.com','Shown in the footer and on banned/suspended screens.'],
   ['maximumUploadSize','Maximum upload size (MB)','5','Largest image a user can attach to a listing.'],
   ['maximumListingsPerUser','Maximum listings per user','20','Users cannot post more active listings than this.'],

@@ -3,12 +3,12 @@ import { AnimatePresence } from "framer-motion";
 import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
-import { SettingsProvider, useSettings } from "./context/SettingsContext";
+import { SettingsProvider } from "./context/SettingsContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
 import { MaintenanceBanner } from "./components/MaintenanceBanner";
-import { Megaphone } from "lucide-react";
+import { GreetingBanner } from "./components/GreetingBanner";
 import AuthPage from "./pages/AuthPage";
 import VerifyEmail from "./pages/VerifyEmail";
 import Dashboard from "./pages/Dashboard";
@@ -22,25 +22,11 @@ import AdminLayout from "./components/admin/AdminLayout";
 import { AdminDashboard, ListingsManager, UsersManager, ReportsManager, CategoriesManager, WebsiteSettings, MaintenanceManager, Analytics, AdminLogs } from "./pages/admin/AdminPages";
 import "@/App.css";
 
-const AnnouncementBanner = () => {
-  const { announcement } = useSettings();
-  if (!announcement?.trim()) return null;
-  return (
-    <div
-      className="w-full bg-orange-50 border-b border-orange-100 text-orange-900 dark:bg-orange-500/10 dark:border-orange-500/20 dark:text-orange-300 px-4 py-2 text-center text-sm flex items-center justify-center gap-2"
-      data-testid="announcement-banner"
-    >
-      <Megaphone className="w-4 h-4 shrink-0" />
-      {announcement}
-    </div>
-  );
-};
-
 const Shell = ({ children }) => (
   <div className="min-h-screen bg-[#F8F9FA]">
     <MaintenanceBanner />
     <Navbar />
-    <AnnouncementBanner />
+    <GreetingBanner />
     <AnimatePresence mode="wait">{children}</AnimatePresence>
     <Footer />
   </div>
