@@ -21,8 +21,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
-import { ArrowLeft, Pencil, Trash2, Mail, Loader2, ImageOff } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, Mail, Loader2, ImageOff, Flag } from "lucide-react";
 import { toast } from "sonner";
+import { ReportDialog } from "../components/ReportDialog";
 
 export default function ListingDetails() {
   const { id } = useParams();
@@ -30,6 +31,7 @@ export default function ListingDetails() {
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -183,6 +185,16 @@ export default function ListingDetails() {
             </div>
           </div>
 
+          {!isOwner && (
+            <button
+              onClick={() => setReportOpen(true)}
+              data-testid="details-report-btn"
+              className="mt-5 w-full inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 hover:bg-red-50 font-medium py-3 rounded-full transition-colors text-sm"
+            >
+              <Flag className="w-4 h-4" /> Report this listing
+            </button>
+          )}
+
           {isOwner && (
             <div
               className="mt-5 flex gap-3"
@@ -231,6 +243,11 @@ export default function ListingDetails() {
           )}
         </div>
       </div>
+      <ReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        listing={listing}
+      />
     </motion.div>
   );
 }

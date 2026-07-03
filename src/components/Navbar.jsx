@@ -8,14 +8,17 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Plus, LogOut, User, Package2, Store, ShieldCheck } from "lucide-react";
+import { Plus, LogOut, User, Package2, Store, ShieldCheck, Flag } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { useSettings } from "../context/SettingsContext";
 import { ThemeToggle } from "./ThemeToggle";
+import { ReportDialog } from "./ReportDialog";
 
 export const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
   const { websiteName } = useSettings();
+  const [reportOpen, setReportOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -109,6 +112,13 @@ export const Navbar = () => {
                 >
                   <User className="w-4 h-4 mr-2" /> Account settings
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setReportOpen(true)}
+                  className="cursor-pointer"
+                  data-testid="navbar-report-item"
+                >
+                  <Flag className="w-4 h-4 mr-2" /> Send a report
+                </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem
                     onClick={() => navigate("/admin")}
@@ -131,6 +141,7 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
+      <ReportDialog open={reportOpen} onOpenChange={setReportOpen} />
     </header>
   );
 };

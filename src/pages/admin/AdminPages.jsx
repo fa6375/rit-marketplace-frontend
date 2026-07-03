@@ -29,7 +29,84 @@ export function ListingsManager() {
 
 export function UsersManager(){const {user}=useAuth();const {data:users}=useCollection("users",orderBy("createdAt","desc"));const {data:listings}=useCollection("listings");const [search,setSearch]=useState("");const act=async(u,changes,label)=>{try{await updateUser(user,u.id,changes,`${label} ${u.displayName||u.email}`);toast.success("User updated")}catch(e){toast.error(e.message)}};const remove=async u=>{try{await deleteUserAccount(user,u.id,u.displayName||u.email);toast.success("User account deleted")}catch(e){toast.error(e.message)}};return <><PageHeader title="Users" subtitle="Manage roles and account access." actions={<Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search users…"/>}/><Panel className="overflow-x-auto"><table className="w-full min-w-[800px] text-left text-sm"><thead className="border-b border-white/10 text-xs uppercase text-slate-500"><tr>{["User","Joined","Role","Listings","Status","Actions"].map(x=><th className="p-4" key={x}>{x}</th>)}</tr></thead><tbody>{users.filter(u=>[u.displayName,u.email].some(v=>v?.toLowerCase().includes(search.toLowerCase()))).map(u=><tr key={u.id} className="border-b border-white/5"><td className="p-4"><div className="flex items-center gap-3"><img src={u.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName||u.email)}`} alt="" className="h-9 w-9 rounded-full"/><div><p>{u.displayName||"Unnamed user"}</p><p className="text-xs text-slate-500">{u.email}</p></div></div></td><td className="p-4 text-slate-400">{formatDate(u.createdAt)}</td><td className="p-4"><Badge tone={u.role==="admin"?"orange":"slate"}>{u.role||"user"}</Badge></td><td className="p-4">{listings.filter(l=>l.ownerId===u.id).length}</td><td className="p-4"><Badge tone={u.status==="banned"?"red":u.status==="suspended"?"yellow":"emerald"}>{u.status||"active"}</Badge></td><td className="p-4"><div className="flex gap-1"><Button variant="secondary" disabled={u.id===user.uid} onClick={()=>act(u,{role:u.role==="admin"?"user":"admin"},u.role==="admin"?"Removed admin from":"Promoted") }><Shield className="h-4 w-4"/></Button><Button variant="secondary" onClick={()=>act(u,{status:u.status==="suspended"?"active":"suspended"},u.status==="suspended"?"Reactivated":"Suspended")}><Activity className="h-4 w-4"/></Button><Button variant="danger" disabled={u.id===user.uid} onClick={()=>act(u,{status:u.status==="banned"?"active":"banned"},u.status==="banned"?"Unbanned":"Banned")}><Ban className="h-4 w-4"/></Button><Button variant="danger" disabled={u.id===user.uid} onClick={()=>window.confirm(`Permanently delete ${u.email}?`)&&remove(u)}><Trash2 className="h-4 w-4"/></Button></div></td></tr>)}</tbody></table>{!users.length&&<Empty/>}</Panel></>}
 
-export function ReportsManager(){const {user}=useAuth();const {data:reports}=useCollection("reports",orderBy("createdAt","desc"));const {data:listings}=useCollection("listings");const dismiss=async(r)=>{await updateDoc(doc(db,"reports",r.id),{status:"dismissed",resolvedAt:serverTimestamp()});await logAdminAction(user,"Dismissed report",{reportId:r.id});toast.success("Report dismissed")};const remove=async(r)=>{const listing=listings.find(l=>l.id===r.listingId);if(listing)await deleteListing(user,listing);await deleteDoc(doc(db,"reports",r.id));toast.success("Listing and report deleted")};return <><PageHeader title="Reports" subtitle="Review community safety reports."/><div className="grid gap-4">{reports.map(r=><Panel key={r.id} className="p-5"><div className="flex flex-col justify-between gap-4 sm:flex-row"><div><div className="flex items-center gap-2"><Badge tone={r.status==="dismissed"?"slate":"red"}>{r.status||"pending"}</Badge><span className="text-xs text-slate-500">{formatDate(r.createdAt)}</span></div><h3 className="mt-3 font-medium">{r.reason||"Listing report"}</h3><p className="mt-1 text-sm text-slate-400">Reporter: {r.reporterName||r.reporterEmail||r.reporterId}</p><p className="text-sm text-slate-400">Listing: {r.listingTitle||r.listingId}</p></div><div className="flex items-center gap-2"><Button variant="secondary" onClick={()=>dismiss(r)}>Dismiss</Button><Button variant="danger" onClick={()=>window.confirm("Delete the reported listing?")&&remove(r)}>Delete listing</Button>{r.sellerId&&<Button variant="danger" onClick={()=>updateUser(user,r.sellerId,{status:"banned"},"Banned reported seller")}>Ban seller</Button>}</div></div></Panel>)}{!reports.length&&<Panel><Empty>No reports—everything is calm.</Empty></Panel>}</div></>}
+export function ReportsManager(){
+  const {user}=useAuth();
+  const {data:reports}=useCollection("reports",orderBy("createdAt","desc"));
+  const {data:listings}=useCollection("listings");
+  const [filter,setFilter]=useState("all");
+
+  const setStatus=async(r,status,actionLabel)=>{
+    try{
+      await updateDoc(doc(db,"reports",r.id),{status,resolvedAt:serverTimestamp(),resolvedBy:user.uid});
+      await logAdminAction(user,actionLabel,{reportId:r.id});
+      toast.success(`Report ${status}`)
+    }catch(e){toast.error(e.message)}
+  };
+  const removeReport=async(r)=>{
+    try{
+      await deleteDoc(doc(db,"reports",r.id));
+      await logAdminAction(user,"Deleted report",{reportId:r.id});
+      toast.success("Report deleted")
+    }catch(e){toast.error(e.message)}
+  };
+  const removeListing=async(r)=>{
+    try{
+      const listing=listings.find(l=>l.id===r.listingId);
+      if(listing)await deleteListing(user,listing);
+      else toast.info("Listing was already removed");
+      await updateDoc(doc(db,"reports",r.id),{status:"resolved",resolvedAt:serverTimestamp(),resolvedBy:user.uid});
+      toast.success("Listing removed and report resolved")
+    }catch(e){toast.error(e.message)}
+  };
+  const banSeller=async(r)=>{
+    try{
+      await updateUser(user,r.sellerId,{status:"banned"},`Banned reported seller ${r.sellerName||r.sellerEmail||r.sellerId}`);
+      toast.success("Seller banned")
+    }catch(e){toast.error(e.message)}
+  };
+
+  const visible=reports.filter(r=>{
+    if(filter==="pending")return !r.status||r.status==="pending";
+    if(filter==="listing")return r.type==="listing"||r.listingId;
+    if(filter==="general")return r.type==="general"||(!r.type&&!r.listingId);
+    return true;
+  });
+  const isListing=(r)=>r.type==="listing"||Boolean(r.listingId);
+  const isPending=(r)=>!r.status||r.status==="pending";
+
+  return <><PageHeader title="Reports" subtitle="Community reports — general feedback and flagged listings." actions={
+    <div className="flex gap-2">{[["all","All"],["pending","Pending"],["listing","Listings"],["general","General"]].map(([id,label])=>
+      <Button key={id} variant={filter===id?"primary":"secondary"} onClick={()=>setFilter(id)}>{label}</Button>)}</div>
+  }/>
+  <div className="grid gap-4">
+    {visible.map(r=><Panel key={r.id} className="p-5">
+      <div className="flex flex-col justify-between gap-4 lg:flex-row">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone={r.status==="dismissed"?"slate":r.status==="resolved"?"emerald":"red"}>{r.status||"pending"}</Badge>
+            <Badge tone={isListing(r)?"orange":"slate"}>{isListing(r)?"Listing report":"General report"}</Badge>
+            {(r.categoryLabel||r.category)&&<Badge tone="yellow">{r.categoryLabel||r.category}</Badge>}
+            <span className="text-xs text-slate-500">{formatDate(r.createdAt)}</span>
+          </div>
+          <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-200">{r.reason||"No description provided."}</p>
+          <div className="mt-3 grid gap-1 text-sm text-slate-400">
+            <p>Reporter: <span className="text-slate-300">{r.reporterName||"Unknown"}</span>{r.reporterEmail&&<span className="text-slate-500"> • {r.reporterEmail}</span>}</p>
+            {isListing(r)&&<p>Listing: <span className="text-slate-300">{r.listingTitle||r.listingId}</span>{listings.find(l=>l.id===r.listingId)?"":<span className="text-slate-600"> (already removed)</span>}</p>}
+            {isListing(r)&&(r.sellerName||r.sellerEmail)&&<p>Seller: <span className="text-slate-300">{r.sellerName||"Unknown"}</span>{r.sellerEmail&&<span className="text-slate-500"> • {r.sellerEmail}</span>}</p>}
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 lg:flex-col lg:items-stretch">
+          {isPending(r)&&<Button onClick={()=>setStatus(r,"resolved","Resolved report")}>Mark resolved</Button>}
+          {isPending(r)&&<Button variant="secondary" onClick={()=>setStatus(r,"dismissed","Dismissed report")}>Dismiss</Button>}
+          {isListing(r)&&listings.find(l=>l.id===r.listingId)&&<Button variant="danger" onClick={()=>window.confirm("Delete the reported listing?")&&removeListing(r)}>Delete listing</Button>}
+          {isListing(r)&&r.sellerId&&<Button variant="danger" onClick={()=>window.confirm("Ban this seller?")&&banSeller(r)}>Ban seller</Button>}
+          {!isPending(r)&&<Button variant="danger" onClick={()=>window.confirm("Permanently delete this report?")&&removeReport(r)}>Delete report</Button>}
+        </div>
+      </div>
+    </Panel>)}
+    {!visible.length&&<Panel><Empty>No reports here—everything is calm.</Empty></Panel>}
+  </div></>
+}
 
 export function CategoriesManager(){
   const {user}=useAuth();
