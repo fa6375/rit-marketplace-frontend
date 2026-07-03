@@ -62,6 +62,34 @@ h6 {
         --ring: 18 100% 56%;
         --radius: 0.75rem;
     }
+
+    .dark {
+        --background: 222 33% 6%;
+        --foreground: 210 40% 96%;
+        --card: 222 28% 10%;
+        --card-foreground: 210 40% 96%;
+        --popover: 222 28% 10%;
+        --popover-foreground: 210 40% 96%;
+        --primary: 18 100% 56%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 222 20% 16%;
+        --secondary-foreground: 210 40% 96%;
+        --muted: 222 20% 16%;
+        --muted-foreground: 215 16% 62%;
+        --accent: 18 60% 16%;
+        --accent-foreground: 24 100% 70%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 217 19% 20%;
+        --input: 217 19% 20%;
+        --ring: 18 100% 56%;
+    }
+
+    html.dark,
+    .dark body {
+        background: #0b0d12;
+        color: #e5e7eb;
+    }
 }
 
 @layer base {
@@ -77,4 +105,102 @@ h6 {
     [data-debug-wrapper="true"] {
         display: contents !important;
     }
+}
+
+/* ------------------------------------------------------------------ */
+/* Dark mode overrides                                                 */
+/* The public pages use hardcoded light utility classes (bg-white,     */
+/* text-gray-900, bg-[#F8F9FA], …). These overrides re-map them when   */
+/* the .dark class is set on <html> so the whole site flips cleanly.   */
+/* ------------------------------------------------------------------ */
+
+/* Never restyle the admin console — it has its own permanent dark theme */
+.dark body {
+    background: #0b0d12;
+    color: #e5e7eb;
+}
+
+.dark .bg-\[\#F8F9FA\]:not(.admin-theme *) {
+    background-color: #0b0d12 !important;
+}
+.dark .bg-white:not(.admin-theme *) {
+    background-color: #141821 !important;
+}
+.dark .bg-white\/90:not(.admin-theme *) {
+    background-color: rgba(20, 24, 33, 0.9) !important;
+}
+.dark .bg-white\/95:not(.admin-theme *) {
+    background-color: rgba(20, 24, 33, 0.92) !important;
+}
+.dark .bg-gray-50:not(.admin-theme *) {
+    background-color: #10131a !important;
+}
+.dark .bg-gray-100:not(.admin-theme *) {
+    background-color: #1a1f2b !important;
+}
+.dark .bg-gray-200:not(.admin-theme *) {
+    background-color: #242b3a !important;
+}
+.dark .bg-orange-50:not(.admin-theme *) {
+    background-color: rgba(249, 115, 22, 0.12) !important;
+}
+.dark .border-orange-100:not(.admin-theme *) {
+    border-color: rgba(249, 115, 22, 0.25) !important;
+}
+
+.dark .text-gray-900:not(.admin-theme *) {
+    color: #f1f5f9 !important;
+}
+.dark .text-gray-800:not(.admin-theme *) {
+    color: #e2e8f0 !important;
+}
+.dark .text-gray-700:not(.admin-theme *) {
+    color: #cbd5e1 !important;
+}
+.dark .text-gray-600:not(.admin-theme *) {
+    color: #a8b3c4 !important;
+}
+.dark .text-gray-500:not(.admin-theme *) {
+    color: #94a3b8 !important;
+}
+.dark .text-gray-400:not(.admin-theme *) {
+    color: #8b95a7 !important;
+}
+.dark .text-gray-300:not(.admin-theme *) {
+    color: #4b5563 !important;
+}
+.dark .text-\[\#0A0A0A\]:not(.admin-theme *) {
+    color: #f1f5f9 !important;
+}
+
+.dark .border-gray-100:not(.admin-theme *),
+.dark .border-gray-200:not(.admin-theme *) {
+    border-color: rgba(255, 255, 255, 0.09) !important;
+}
+.dark .border-gray-300:not(.admin-theme *) {
+    border-color: rgba(255, 255, 255, 0.18) !important;
+}
+
+.dark .hover\:bg-gray-50:hover:not(.admin-theme *) {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+.dark .hover\:bg-gray-100:hover:not(.admin-theme *) {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+}
+.dark .hover\:bg-gray-200:hover:not(.admin-theme *) {
+    background-color: rgba(255, 255, 255, 0.12) !important;
+}
+.dark .hover\:text-gray-900:hover:not(.admin-theme *) {
+    color: #ffffff !important;
+}
+.dark .hover\:text-gray-700:hover:not(.admin-theme *) {
+    color: #e2e8f0 !important;
+}
+.dark .hover\:border-gray-300:hover:not(.admin-theme *) {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Soft light shadows look dirty on dark backgrounds */
+.dark .shadow-\[0_4px_24px_rgba\(0\2c 0\2c 0\2c 0\.03\)\]:not(.admin-theme *) {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
 }

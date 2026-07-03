@@ -35,7 +35,7 @@ export default function VerifyEmail() {
     setBusy(true);
     try {
       await resendVerification();
-      toast.success("Verification email sent");
+      toast.success("Verification email sent — check your inbox and spam folder.");
       setCooldown(45);
     } catch (e) {
       toast.error("Could not send email. Try again shortly.");
@@ -69,6 +69,9 @@ export default function VerifyEmail() {
           We sent a verification link to{" "}
           <span className="font-medium text-gray-900">{user?.email}</span>.
           Click it, then come back and refresh.
+        </p>
+        <p className="text-xs text-gray-400 mt-3 bg-orange-50 border border-orange-100 rounded-xl px-4 py-2.5">
+          Don't see the email? Check your <span className="font-semibold text-gray-600">spam / junk folder</span> — verification emails sometimes end up there.
         </p>
 
         <div className="mt-7 space-y-2.5">

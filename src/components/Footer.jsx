@@ -1,6 +1,8 @@
 import { Mail, ShoppingBag, ShieldCheck, Users } from 'lucide-react';
+import { useSettings } from '../context/SettingsContext';
 
 export const Footer = () => {
+  const { websiteName, supportEmail } = useSettings();
   return (
     <footer className="mt-16 border-t border-gray-200 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-12 md:grid-cols-3">
@@ -10,7 +12,7 @@ export const Footer = () => {
               <ShoppingBag size={22} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold">RIT Marketplace</h2>
+              <h2 className="text-2xl font-bold">{websiteName || 'RIT Marketplace'}</h2>
               <p className="text-sm text-gray-300">Built for students, powered by community.</p>
             </div>
           </div>
@@ -18,6 +20,15 @@ export const Footer = () => {
           <p className="mt-5 max-w-md text-sm leading-6 text-gray-400">
             A modern marketplace platform helping RIT students safely buy, sell, and connect with others on campus.
           </p>
+
+          {supportEmail && (
+            <a
+              href={`mailto:${supportEmail}`}
+              className="mt-4 inline-flex items-center gap-2 text-sm text-gray-300 hover:text-orange-400 transition"
+            >
+              <Mail size={15} /> Support: {supportEmail}
+            </a>
+          )}
 
           <div className="mt-6 flex gap-4 text-sm text-gray-300">
             <div className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm">
@@ -86,7 +97,7 @@ export const Footer = () => {
       </div>
 
       <div className="border-t border-white/10 px-6 py-5 text-center text-sm text-gray-400">
-        © 2026 RIT Marketplace • Connecting students through smarter campus trading.
+        © 2026 {websiteName || 'RIT Marketplace'} • Connecting students through smarter campus trading.
       </div>
     </footer>
   );

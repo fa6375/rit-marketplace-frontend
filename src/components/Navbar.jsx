@@ -8,11 +8,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Plus, LogOut, User, Package2, Store } from "lucide-react";
+import { Plus, LogOut, User, Package2, Store, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
+import { useSettings } from "../context/SettingsContext";
+import { ThemeToggle } from "./ThemeToggle";
 
 export const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
+  const { websiteName } = useSettings();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -46,11 +49,12 @@ export const Navbar = () => {
               <Store className="w-4 h-4 text-white" strokeWidth={2.5} />
             </motion.div>
             <span className="text-white font-semibold tracking-tight text-lg">
-              Marketplace
+              {websiteName || "Marketplace"}
             </span>
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
             <Link to="/create" data-testid="navbar-create-listing-link">
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -105,6 +109,15 @@ export const Navbar = () => {
                 >
                   <User className="w-4 h-4 mr-2" /> Account settings
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem
+                    onClick={() => navigate("/admin")}
+                    className="cursor-pointer"
+                    data-testid="navbar-admin-item"
+                  >
+                    <ShieldCheck className="w-4 h-4 mr-2" /> Admin panel
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={handleLogout}

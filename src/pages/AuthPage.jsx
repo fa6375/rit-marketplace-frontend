@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { Store, Loader2, ArrowRight, Mail, Lock, User } from "lucide-react";
 import { toast } from "sonner";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login");
@@ -46,8 +47,17 @@ export default function AuthPage() {
     setBusy(true);
     try {
       if (mode === "login") {
-        const u = await login(email.trim(), password);
-        toast.success("Welcome back");
+        const { user: u, profile } = await login(email.trim(), password);
+        // Give feedback based on the account's access level
+        if (profile?.status === "banned") {
+          toast.error("You are banned from this platform.");
+        } else if (profile?.status === "suspended") {
+          toast.warning("Your account is currently suspended.");
+        } else if (profile?.role === "admin") {
+          toast.success("Welcome, admin");
+        } else {
+          toast.success("Welcome back");
+        }
         if (!u.emailVerified) navigate("/verify-email");
         else navigate(redirect, { replace: true });
       } else {
@@ -57,7 +67,9 @@ export default function AuthPage() {
           return;
         }
         await signup(email.trim(), password, name.trim());
-        toast.success("Account created. Check your inbox to verify.");
+        toast.success(
+          "Account created. We sent you a verification email — check your inbox (and your spam folder)."
+        );
         navigate("/verify-email");
       }
     } catch (err) {
@@ -76,7 +88,10 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-[#F8F9FA]">
+    <div className="relative min-h-screen grid lg:grid-cols-2 bg-[#F8F9FA]">
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle variant="auto" />
+      </div>
       {/* Left visual */}
       <div className="hidden lg:block relative overflow-hidden">
         <img
@@ -138,7 +153,7 @@ export default function AuthPage() {
               <p className="text-gray-500 mt-2 leading-relaxed">
                 {mode === "login"
                   ? "Use your verified student email to access the marketplace."
-                  : "We'll send a verification link to your email."}
+                  : "We'll send a verification link to your email. If you don't see it, check your spam folder."}
               </p>
 
               <form onSubmit={handleSubmit} className="mt-8 space-y-4" data-testid="auth-form">

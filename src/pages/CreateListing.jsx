@@ -6,6 +6,9 @@ import {
   collection,
   doc,
   getDoc,
+  getDocs,
+  query,
+  where,
   serverTimestamp,
   updateDoc,
 } from "firebase/firestore";
@@ -19,6 +22,7 @@ import { db, storage } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
 import { DragDropImage } from "../components/DragDropImage";
 import { useCategories } from "../hooks/useCategories";
+import { useSettings } from "../context/SettingsContext";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect } from "react";
@@ -28,6 +32,7 @@ export default function CreateListing({ editMode = false }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const { categories } = useCategories();
+  const { maximumUploadSize, maximumListingsPerUser } = useSettings();
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -90,8 +95,28 @@ export default function CreateListing({ editMode = false }) {
       return;
     }
 
+    // Website settings: maximum upload size
+    if (image && typeof image !== "string" && image.size > maximumUploadSize * 1024 * 1024) {
+      toast.error(`Image is too large. Maximum upload size is ${maximumUploadSize} MB.`);
+      return;
+    }
+
     setBusy(true);
     try {
+      // Website settings: maximum listings per user
+      if (!editMode) {
+        const mine = await getDocs(
+          query(collection(db, "listings"), where("ownerId", "==", user.uid))
+        );
+        if (mine.size >= maximumListingsPerUser) {
+          toast.error(
+            `You've reached the limit of ${maximumListingsPerUser} listings. Delete an old listing to post a new one.`
+          );
+          setBusy(false);
+          return;
+        }
+      }
+
       let imageUrl = existingImage;
       let imagePath = existingImagePath;
 
@@ -117,6 +142,7 @@ export default function CreateListing({ editMode = false }) {
         contact: contact.trim(),
         imageUrl,
         imagePath,
+        ...(image && typeof image !== "string" ? { imageSize: image.size } : {}),
         ownerId: user.uid,
         ownerEmail: user.email,
         ownerName: user.displayName || user.email?.split("@")[0] || "Student",

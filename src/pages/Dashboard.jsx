@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useCategories } from "../hooks/useCategories";
+import { useSettings } from "../context/SettingsContext";
 import { ListingCard } from "../components/ListingCard";
 import { EmptyState } from "../components/EmptyState";
 import { ListingSkeletonGrid } from "../components/ListingSkeleton";
@@ -14,6 +15,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const { categories } = useCategories();
+  const { homepageHeroText } = useSettings();
 
   useEffect(() => {
     const q = query(collection(db, "listings"), orderBy("createdAt", "desc"));
@@ -58,7 +60,7 @@ export default function Dashboard() {
           Campus marketplace
         </p>
         <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-gray-900 mt-2 leading-none">
-          Discover student listings.
+          {homepageHeroText || "Discover student listings."}
         </h1>
         <p className="text-gray-500 mt-3 max-w-xl leading-relaxed">
           Browse items from verified students on your campus. New posts appear
@@ -149,7 +151,7 @@ const CategoryPill = ({ children, active, onClick, testId }) => (
     data-testid={testId}
     className={`inline-flex items-center gap-1.5 whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium border transition-all ${
       active
-        ? "bg-[#0A0A0A] text-white border-[#0A0A0A]"
+        ? "bg-[#0A0A0A] text-white border-[#0A0A0A] dark:bg-[#FF5A1F] dark:border-[#FF5A1F]"
         : "bg-white text-gray-700 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
     }`}
   >

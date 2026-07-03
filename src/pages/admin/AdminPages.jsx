@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, orderBy, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
+import { useEffect, useMemo, useState } from "react";
+import { addDoc, collection, deleteDoc, doc, orderBy, serverTimestamp, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Users, Tags, Flag, Star, Activity, HardDrive, Search, Trash2, EyeOff, Sparkles, Shield, Ban, Check, GripVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -27,14 +27,157 @@ export function ListingsManager() {
   return <><PageHeader title="Listings" subtitle={`${listings.length} marketplace listings`} actions={<div className="flex gap-2"><Input value={search} onChange={e=>{setSearch(e.target.value);setPage(1)}} placeholder="Search listings…"/>{selected.length>0&&<><Button variant="secondary" onClick={()=>act(()=>bulkUpdateListings(user,chosen,{hidden:true},`Hid ${chosen.length} listings`),"Listings hidden")}><EyeOff className="inline h-4 w-4"/> Hide</Button><Button onClick={()=>act(()=>bulkUpdateListings(user,chosen,{featured:true},`Featured ${chosen.length} listings`),"Listings featured")}><Sparkles className="inline h-4 w-4"/> Feature</Button></>}</div>}/><Panel className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500"><tr><th className="p-4"><input type="checkbox" checked={shown.length>0&&shown.every(x=>selected.includes(x.id))} onChange={e=>setSelected(e.target.checked?shown.map(x=>x.id):[])}/></th>{["Image","Title / seller","Price","Category","Status","Created","Actions"].map(x=><th key={x} className="p-4">{x}</th>)}</tr></thead><tbody>{shown.map(l=><tr key={l.id} className="border-b border-white/5 hover:bg-white/[.02]"><td className="p-4"><input type="checkbox" checked={selected.includes(l.id)} onChange={()=>setSelected(s=>s.includes(l.id)?s.filter(x=>x!==l.id):[...s,l.id])}/></td><td className="p-4"><img src={l.imageUrl} alt="" className="h-11 w-14 rounded-lg object-cover bg-white/5"/></td><td className="p-4"><p className="font-medium">{l.title}</p><p className="text-xs text-slate-500">{l.ownerName||l.ownerEmail}</p></td><td className="p-4">${Number(l.price||0).toFixed(2)}</td><td className="p-4 capitalize">{l.category}</td><td className="p-4"><Badge tone={l.hidden?"red":l.featured?"orange":"emerald"}>{l.hidden?"Hidden":l.featured?"Featured":"Active"}</Badge></td><td className="p-4 text-slate-400">{formatDate(l.createdAt)}</td><td className="p-4"><div className="flex gap-1"><Button variant="secondary" onClick={()=>act(()=>updateListing(user,l.id,{hidden:!l.hidden},`${l.hidden?"Unhidden":"Hidden"} “${l.title}”`),"Listing updated")}>{l.hidden?<Check className="h-4 w-4"/>:<EyeOff className="h-4 w-4"/>}</Button><Button variant="secondary" onClick={()=>act(()=>updateListing(user,l.id,{featured:!l.featured},`${l.featured?"Unfeatured":"Featured"} “${l.title}”`),"Listing updated")}><Star className={`h-4 w-4 ${l.featured?"fill-orange-400 text-orange-400":""}`}/></Button><Button variant="danger" onClick={()=>window.confirm(`Delete ${l.title}?`)&&act(()=>deleteListing(user,l),"Listing deleted")}><Trash2 className="h-4 w-4"/></Button></div></td></tr>)}</tbody></table>{!shown.length&&<Empty>No matching listings.</Empty>}<div className="flex justify-between p-4"><span className="text-xs text-slate-500">Page {page} of {Math.max(1,Math.ceil(filtered.length/size))}</span><div className="space-x-2"><Button variant="secondary" disabled={page===1} onClick={()=>setPage(p=>p-1)}>Previous</Button><Button variant="secondary" disabled={page>=Math.ceil(filtered.length/size)} onClick={()=>setPage(p=>p+1)}>Next</Button></div></div></Panel></>;
 }
 
-export function UsersManager(){const {user}=useAuth();const {data:users}=useCollection("users",orderBy("createdAt","desc"));const {data:listings}=useCollection("listings");const [search,setSearch]=useState("");const act=async(u,changes,label)=>{try{await updateUser(user,u.id,changes,`${label} ${u.displayName||u.email}`);toast.success("User updated")}catch(e){toast.error(e.message)}};const remove=async u=>{try{await deleteUserAccount(user,u.id,u.displayName||u.email);toast.success("User account deleted")}catch(e){toast.error(e.message)}};return <><PageHeader title="Users" subtitle="Manage roles and account access." actions={<Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search users…"/>}/><Panel className="overflow-x-auto"><table className="w-full min-w-[800px] text-left text-sm"><thead className="border-b border-white/10 text-xs uppercase text-slate-500"><tr>{["User","Joined","Role","Listings","Status","Actions"].map(x=><th className="p-4" key={x}>{x}</th>)}</tr></thead><tbody>{users.filter(u=>[u.displayName,u.email].some(v=>v?.toLowerCase().includes(search.toLowerCase()))).map(u=><tr key={u.id} className="border-b border-white/5"><td className="p-4"><div className="flex items-center gap-3"><img src={u.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName||u.email)}`} alt="" className="h-9 w-9 rounded-full"/><div><p>{u.displayName||"Unnamed user"}</p><p className="text-xs text-slate-500">{u.email}</p></div></div></td><td className="p-4 text-slate-400">{formatDate(u.createdAt)}</td><td className="p-4"><Badge tone={u.role==="admin"?"orange":"slate"}>{u.role||"user"}</Badge></td><td className="p-4">{listings.filter(l=>l.ownerId===u.id).length}</td><td className="p-4"><Badge tone={u.status==="banned"?"red":u.status==="suspended"?"yellow":"emerald"}>{u.status||"active"}</Badge></td><td className="p-4"><div className="flex gap-1"><Button variant="secondary" disabled={u.id===user.uid} onClick={()=>act(u,{role:u.role==="admin"?"user":"admin"},u.role==="admin"?"Removed admin from":"Promoted") }><Shield className="h-4 w-4"/></Button><Button variant="secondary" onClick={()=>act(u,{status:u.status==="suspended"?"active":"suspended"},u.status==="suspended"?"Reactivated":"Suspended")}><Activity className="h-4 w-4"/></Button><Button variant="danger" disabled={u.id===user.uid} onClick={()=>act(u,{status:"banned"},"Banned")}><Ban className="h-4 w-4"/></Button><Button variant="danger" disabled={u.id===user.uid} onClick={()=>window.confirm(`Permanently delete ${u.email}?`)&&remove(u)}><Trash2 className="h-4 w-4"/></Button></div></td></tr>)}</tbody></table>{!users.length&&<Empty/>}</Panel></>}
+export function UsersManager(){const {user}=useAuth();const {data:users}=useCollection("users",orderBy("createdAt","desc"));const {data:listings}=useCollection("listings");const [search,setSearch]=useState("");const act=async(u,changes,label)=>{try{await updateUser(user,u.id,changes,`${label} ${u.displayName||u.email}`);toast.success("User updated")}catch(e){toast.error(e.message)}};const remove=async u=>{try{await deleteUserAccount(user,u.id,u.displayName||u.email);toast.success("User account deleted")}catch(e){toast.error(e.message)}};return <><PageHeader title="Users" subtitle="Manage roles and account access." actions={<Input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search users…"/>}/><Panel className="overflow-x-auto"><table className="w-full min-w-[800px] text-left text-sm"><thead className="border-b border-white/10 text-xs uppercase text-slate-500"><tr>{["User","Joined","Role","Listings","Status","Actions"].map(x=><th className="p-4" key={x}>{x}</th>)}</tr></thead><tbody>{users.filter(u=>[u.displayName,u.email].some(v=>v?.toLowerCase().includes(search.toLowerCase()))).map(u=><tr key={u.id} className="border-b border-white/5"><td className="p-4"><div className="flex items-center gap-3"><img src={u.photoURL||`https://ui-avatars.com/api/?name=${encodeURIComponent(u.displayName||u.email)}`} alt="" className="h-9 w-9 rounded-full"/><div><p>{u.displayName||"Unnamed user"}</p><p className="text-xs text-slate-500">{u.email}</p></div></div></td><td className="p-4 text-slate-400">{formatDate(u.createdAt)}</td><td className="p-4"><Badge tone={u.role==="admin"?"orange":"slate"}>{u.role||"user"}</Badge></td><td className="p-4">{listings.filter(l=>l.ownerId===u.id).length}</td><td className="p-4"><Badge tone={u.status==="banned"?"red":u.status==="suspended"?"yellow":"emerald"}>{u.status||"active"}</Badge></td><td className="p-4"><div className="flex gap-1"><Button variant="secondary" disabled={u.id===user.uid} onClick={()=>act(u,{role:u.role==="admin"?"user":"admin"},u.role==="admin"?"Removed admin from":"Promoted") }><Shield className="h-4 w-4"/></Button><Button variant="secondary" onClick={()=>act(u,{status:u.status==="suspended"?"active":"suspended"},u.status==="suspended"?"Reactivated":"Suspended")}><Activity className="h-4 w-4"/></Button><Button variant="danger" disabled={u.id===user.uid} onClick={()=>act(u,{status:u.status==="banned"?"active":"banned"},u.status==="banned"?"Unbanned":"Banned")}><Ban className="h-4 w-4"/></Button><Button variant="danger" disabled={u.id===user.uid} onClick={()=>window.confirm(`Permanently delete ${u.email}?`)&&remove(u)}><Trash2 className="h-4 w-4"/></Button></div></td></tr>)}</tbody></table>{!users.length&&<Empty/>}</Panel></>}
 
 export function ReportsManager(){const {user}=useAuth();const {data:reports}=useCollection("reports",orderBy("createdAt","desc"));const {data:listings}=useCollection("listings");const dismiss=async(r)=>{await updateDoc(doc(db,"reports",r.id),{status:"dismissed",resolvedAt:serverTimestamp()});await logAdminAction(user,"Dismissed report",{reportId:r.id});toast.success("Report dismissed")};const remove=async(r)=>{const listing=listings.find(l=>l.id===r.listingId);if(listing)await deleteListing(user,listing);await deleteDoc(doc(db,"reports",r.id));toast.success("Listing and report deleted")};return <><PageHeader title="Reports" subtitle="Review community safety reports."/><div className="grid gap-4">{reports.map(r=><Panel key={r.id} className="p-5"><div className="flex flex-col justify-between gap-4 sm:flex-row"><div><div className="flex items-center gap-2"><Badge tone={r.status==="dismissed"?"slate":"red"}>{r.status||"pending"}</Badge><span className="text-xs text-slate-500">{formatDate(r.createdAt)}</span></div><h3 className="mt-3 font-medium">{r.reason||"Listing report"}</h3><p className="mt-1 text-sm text-slate-400">Reporter: {r.reporterName||r.reporterEmail||r.reporterId}</p><p className="text-sm text-slate-400">Listing: {r.listingTitle||r.listingId}</p></div><div className="flex items-center gap-2"><Button variant="secondary" onClick={()=>dismiss(r)}>Dismiss</Button><Button variant="danger" onClick={()=>window.confirm("Delete the reported listing?")&&remove(r)}>Delete listing</Button>{r.sellerId&&<Button variant="danger" onClick={()=>updateUser(user,r.sellerId,{status:"banned"},"Banned reported seller")}>Ban seller</Button>}</div></div></Panel>)}{!reports.length&&<Panel><Empty>No reports—everything is calm.</Empty></Panel>}</div></>}
 
-export function CategoriesManager(){const {user}=useAuth();const {categories}=useCategories();const [name,setName]=useState("");const add=async()=>{if(!name.trim())return;const slug=name.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-");await setDoc(doc(db,"categories",slug),{name:name.trim(),order:categories.length,createdAt:serverTimestamp()});await logAdminAction(user,`Added category “${name.trim()}”`);setName("");toast.success("Category added")};const remove=async(c)=>{await deleteDoc(doc(db,"categories",c.id));await logAdminAction(user,`Deleted category “${c.name||c.label}”`);toast.success("Category deleted")};const rename=async(c)=>{const next=window.prompt("Category name",c.name||c.label);if(next){await updateDoc(doc(db,"categories",c.id),{name:next});await logAdminAction(user,`Renamed category to “${next}”`)}};const move=async(c,direction)=>{const target=categories[categories.indexOf(c)+direction];if(!target)return;await Promise.all([updateDoc(doc(db,"categories",c.id),{order:target.order}),updateDoc(doc(db,"categories",target.id),{order:c.order})]);await logAdminAction(user,"Reordered categories")};return <><PageHeader title="Categories" subtitle="These categories update listing forms in real time." actions={<div className="flex gap-2"><Input value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} placeholder="New category"/><Button onClick={add}>Add category</Button></div>}/><Panel>{categories.map((c,i)=><div key={c.id} className="flex items-center gap-4 border-b border-white/5 p-4"><GripVertical className="h-4 w-4 text-slate-600"/><span className="flex-1 font-medium">{c.name||c.label}</span><Button variant="secondary" disabled={!i} onClick={()=>move(c,-1)}>↑</Button><Button variant="secondary" disabled={i===categories.length-1} onClick={()=>move(c,1)}>↓</Button><Button variant="secondary" onClick={()=>rename(c)}>Edit</Button><Button variant="danger" onClick={()=>window.confirm("Delete this category?")&&remove(c)}>Delete</Button></div>)}</Panel></>}
+export function CategoriesManager(){
+  const {user}=useAuth();
+  const {categories,loading,fromFirestore}=useCategories();
+  const [name,setName]=useState("");
+  const [editingId,setEditingId]=useState(null);
+  const [editValue,setEditValue]=useState("");
+  const [dragIndex,setDragIndex]=useState(null);
+  const [seeding,setSeeding]=useState(false);
 
-const settingsFields=[['websiteName','Website name','RIT Marketplace'],['homepageBanner','Homepage banner URL','https://…'],['announcement','Announcement','Welcome back!'],['supportEmail','Support email','support@example.com'],['defaultCurrency','Default currency','USD'],['maximumUploadSize','Maximum upload size (MB)','5'],['maximumListingsPerUser','Maximum listings per user','20'],['homepageHeroText','Homepage hero text','Discover student listings.'],['featuredListingsCount','Featured listings count','4']];
-export function WebsiteSettings(){const {user}=useAuth();const {data}=useCollection("settings");const existing=data.find(x=>x.id==="website");const [form,setForm]=useState({});const value=(key,fallback)=>form[key]??existing?.[key]??fallback;const save=async(e)=>{e.preventDefault();const payload=Object.fromEntries(settingsFields.map(([k,,fallback])=>[k,value(k,fallback)]));payload.maximumUploadSize=Number(payload.maximumUploadSize);payload.maximumListingsPerUser=Number(payload.maximumListingsPerUser);payload.featuredListingsCount=Number(payload.featuredListingsCount);await setDoc(doc(db,"settings","website"),{...payload,updatedAt:serverTimestamp()},{merge:true});await logAdminAction(user,"Updated website settings");toast.success("Settings saved")};return <><PageHeader title="Website settings" subtitle="Control public-facing marketplace configuration."/><Panel className="p-6"><form onSubmit={save} className="grid gap-5 md:grid-cols-2">{settingsFields.map(([key,label,fallback])=><label key={key} className={key==="announcement"||key==="homepageHeroText"?"md:col-span-2":""}><span className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-400">{label}</span><Input value={value(key,fallback)} onChange={e=>setForm(f=>({...f,[key]:e.target.value}))} className="w-full"/></label>)}<div className="md:col-span-2"><Button type="submit">Save settings</Button></div></form></Panel></>}
+  // If the categories collection is empty, the UI used to show the built-in
+  // fallback categories that don't exist in Firestore — editing them silently
+  // did nothing. Seed the defaults into Firestore once so everything is editable.
+  useEffect(()=>{
+    if(loading||fromFirestore||seeding)return;
+    (async()=>{
+      setSeeding(true);
+      try{
+        const batch=writeBatch(db);
+        categories.forEach((c,order)=>batch.set(doc(db,"categories",c.id),{name:c.name||c.label,order,createdAt:serverTimestamp()},{merge:true}));
+        await batch.commit();
+      }catch(e){toast.error(e.message)}
+      finally{setSeeding(false)}
+    })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[loading,fromFirestore]);
+
+  const add=async()=>{
+    if(!name.trim())return;
+    const slug=name.toLowerCase().trim().replace(/[^a-z0-9]+/g,"-");
+    if(categories.some(c=>c.id===slug)){toast.error("That category already exists");return}
+    try{
+      await setDoc(doc(db,"categories",slug),{name:name.trim(),order:categories.length,createdAt:serverTimestamp()});
+      await logAdminAction(user,`Added category “${name.trim()}”`);
+      setName("");toast.success("Category added")
+    }catch(e){toast.error(e.message)}
+  };
+  const remove=async(c)=>{
+    try{
+      await deleteDoc(doc(db,"categories",c.id));
+      await logAdminAction(user,`Deleted category “${c.name||c.label}”`);
+      toast.success("Category deleted")
+    }catch(e){toast.error(e.message)}
+  };
+  const startEdit=(c)=>{setEditingId(c.id);setEditValue(c.name||c.label||"")};
+  const saveEdit=async(c)=>{
+    const next=editValue.trim();
+    setEditingId(null);
+    if(!next||next===(c.name||c.label))return;
+    try{
+      await setDoc(doc(db,"categories",c.id),{name:next},{merge:true});
+      await logAdminAction(user,`Renamed category “${c.name||c.label}” to “${next}”`);
+      toast.success("Category renamed")
+    }catch(e){toast.error(e.message)}
+  };
+  const persistOrder=async(ordered)=>{
+    try{
+      const batch=writeBatch(db);
+      ordered.forEach((c,order)=>batch.set(doc(db,"categories",c.id),{order},{merge:true}));
+      await batch.commit();
+      await logAdminAction(user,"Reordered categories");
+    }catch(e){toast.error(e.message)}
+  };
+  const move=async(c,direction)=>{
+    const i=categories.indexOf(c);const j=i+direction;
+    if(j<0||j>=categories.length)return;
+    const ordered=[...categories];[ordered[i],ordered[j]]=[ordered[j],ordered[i]];
+    await persistOrder(ordered);
+  };
+  const onDrop=async(index)=>{
+    if(dragIndex===null||dragIndex===index){setDragIndex(null);return}
+    const ordered=[...categories];
+    const [moved]=ordered.splice(dragIndex,1);
+    ordered.splice(index,0,moved);
+    setDragIndex(null);
+    await persistOrder(ordered);
+  };
+
+  return <><PageHeader title="Categories" subtitle="Drag to reorder, click Edit to rename. Changes update listing forms and the homepage instantly." actions={<div className="flex gap-2"><Input value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} placeholder="New category"/><Button onClick={add}>Add category</Button></div>}/>
+  <Panel>
+    {seeding&&<div className="p-4 text-sm text-slate-500">Preparing categories…</div>}
+    {categories.map((c,i)=>
+      <div key={c.id}
+        draggable
+        onDragStart={()=>setDragIndex(i)}
+        onDragOver={e=>e.preventDefault()}
+        onDrop={()=>onDrop(i)}
+        onDragEnd={()=>setDragIndex(null)}
+        className={`flex items-center gap-4 border-b border-white/5 p-4 transition ${dragIndex===i?"opacity-40":""} ${dragIndex!==null&&dragIndex!==i?"outline-dashed outline-1 outline-white/10":""}`}>
+        <GripVertical className="h-4 w-4 cursor-grab text-slate-600 active:cursor-grabbing"/>
+        {editingId===c.id
+          ? <Input autoFocus value={editValue} onChange={e=>setEditValue(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")saveEdit(c);if(e.key==="Escape")setEditingId(null)}} onBlur={()=>saveEdit(c)} className="flex-1"/>
+          : <span className="flex-1 font-medium">{c.name||c.label}<span className="ml-2 text-xs text-slate-600">/{c.id}</span></span>}
+        <Button variant="secondary" disabled={!i} onClick={()=>move(c,-1)}>↑</Button>
+        <Button variant="secondary" disabled={i===categories.length-1} onClick={()=>move(c,1)}>↓</Button>
+        {editingId===c.id
+          ? <Button onClick={()=>saveEdit(c)}>Save</Button>
+          : <Button variant="secondary" onClick={()=>startEdit(c)}>Edit</Button>}
+        <Button variant="danger" onClick={()=>window.confirm("Delete this category?")&&remove(c)}>Delete</Button>
+      </div>)}
+    {!categories.length&&!seeding&&<Empty>No categories yet — add one above.</Empty>}
+  </Panel></>
+}
+
+const settingsFields=[
+  ['websiteName','Website name','RIT Marketplace','Shown in the navbar, footer and browser tab.'],
+  ['homepageHeroText','Homepage hero text','Discover student listings.','The big headline on the homepage.'],
+  ['announcement','Announcement banner','','Shown as a banner under the navbar for all users. Leave empty to hide.'],
+  ['supportEmail','Support email','support@example.com','Shown in the footer and on banned/suspended screens.'],
+  ['maximumUploadSize','Maximum upload size (MB)','5','Largest image a user can attach to a listing.'],
+  ['maximumListingsPerUser','Maximum listings per user','20','Users cannot post more active listings than this.'],
+];
+export function WebsiteSettings(){
+  const {user}=useAuth();
+  const {data}=useCollection("settings");
+  const existing=data.find(x=>x.id==="website");
+  const [form,setForm]=useState({});
+  const [saving,setSaving]=useState(false);
+  const value=(key,fallback)=>form[key]??existing?.[key]??fallback;
+  const save=async(e)=>{
+    e.preventDefault();
+    setSaving(true);
+    try{
+      const payload=Object.fromEntries(settingsFields.map(([k,,fallback])=>[k,value(k,fallback)]));
+      const upload=Number(payload.maximumUploadSize);
+      const maxListings=Number(payload.maximumListingsPerUser);
+      if(!payload.websiteName?.toString().trim()){toast.error("Website name cannot be empty");setSaving(false);return}
+      if(!Number.isFinite(upload)||upload<=0){toast.error("Maximum upload size must be a positive number");setSaving(false);return}
+      if(!Number.isFinite(maxListings)||maxListings<=0){toast.error("Maximum listings per user must be a positive number");setSaving(false);return}
+      payload.maximumUploadSize=upload;
+      payload.maximumListingsPerUser=maxListings;
+      await setDoc(doc(db,"settings","website"),{...payload,updatedAt:serverTimestamp()},{merge:true});
+      await logAdminAction(user,"Updated website settings",payload);
+      toast.success("Settings saved — changes are live on the website")
+    }catch(err){toast.error(err.message)}
+    finally{setSaving(false)}
+  };
+  return <><PageHeader title="Website settings" subtitle="Every setting here is connected to the live website."/>
+  <Panel className="p-6"><form onSubmit={save} className="grid gap-6 md:grid-cols-2">
+    {settingsFields.map(([key,label,fallback,hint])=>
+      <label key={key} className={key==="announcement"||key==="homepageHeroText"?"md:col-span-2":""}>
+        <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-400">{label}</span>
+        <Input type={key.startsWith("maximum")?"number":"text"} min={key.startsWith("maximum")?1:undefined} value={value(key,fallback)} onChange={e=>setForm(f=>({...f,[key]:e.target.value}))} className="w-full"/>
+        <span className="mt-1.5 block text-xs text-slate-600">{hint}</span>
+      </label>)}
+    <div className="md:col-span-2"><Button type="submit" disabled={saving}>{saving?"Saving…":"Save settings"}</Button></div>
+  </form></Panel></>
+}
 
 export function MaintenanceManager(){const {user}=useAuth();const {data}=useCollection("settings");const config=data.find(x=>x.id==="maintenance")||{};const toggle=async()=>{await setDoc(doc(db,"settings","maintenance"),{enabled:!config.enabled,updatedAt:serverTimestamp(),updatedBy:user.uid},{merge:true});await logAdminAction(user,`${!config.enabled?"Enabled":"Disabled"} maintenance mode`);toast.success(`Maintenance ${!config.enabled?"enabled":"disabled"}`)};return <><PageHeader title="Maintenance" subtitle="Take the public marketplace offline instantly."/><Panel className="max-w-2xl p-7"><div className="flex items-center justify-between gap-6"><div><div className="flex items-center gap-2"><h2 className="text-lg font-medium">Maintenance mode</h2><Badge tone={config.enabled?"red":"emerald"}>{config.enabled?"Enabled":"Disabled"}</Badge></div><p className="mt-2 text-sm leading-6 text-slate-400">When enabled, regular users see the maintenance page. Administrators retain full access.</p></div><button onClick={toggle} className={`relative h-8 w-14 rounded-full transition ${config.enabled?"bg-orange-500":"bg-slate-700"}`}><span className={`absolute top-1 h-6 w-6 rounded-full bg-white transition ${config.enabled?"left-7":"left-1"}`}/></button></div></Panel></>}
 

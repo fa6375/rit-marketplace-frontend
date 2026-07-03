@@ -18,6 +18,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
+  const [profileReady, setProfileReady] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -30,6 +31,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         setUser(null);
         setProfile(null);
+        setProfileReady(false);
       }
       setLoading(false);
     });
@@ -37,10 +39,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    if (!user?.uid) return;
-    return onSnapshot(doc(db, "users", user.uid), (snap) => {
-      setProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null);
-    });
+    if (!user?.uid) {
+      setProfileReady(false);
+      return;
+    }
+    setProfileReady(false);
+    return onSnapshot(
+      doc(db, "users", user.uid),
+      (snap) => {
+        setProfile(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+        setProfileReady(true);
+      },
+      () => setProfileReady(true)
+    );
   }, [user?.uid]);
 
   const ensureUserDoc = async (u, extra = {}) => {
@@ -74,7 +85,14 @@ export const AuthProvider = ({ children }) => {
     const cred = await signInWithEmailAndPassword(auth, email, password);
     await ensureUserDoc(cred.user);
     setUser(auth.currentUser);
-    return cred.user;
+    // Fetch the Firestore profile right away so callers can react to
+    // the account's role (admin) and status (banned / suspended).
+    let userProfile = null;
+    try {
+      const snap = await getDoc(doc(db, "users", cred.user.uid));
+      if (snap.exists()) userProfile = { id: snap.id, ...snap.data() };
+    } catch (e) {}
+    return { user: cred.user, profile: userProfile };
   };
 
   const logout = () => signOut(auth);
@@ -93,6 +111,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     profile,
+    profileReady,
     isAdmin: profile?.role === "admin",
     loading,
     signup,

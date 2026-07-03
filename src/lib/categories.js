@@ -22,5 +22,13 @@ export const CATEGORIES = [
   { id: "other", label: "Other", icon: Package },
 ];
 
-export const getCategoryLabel = (id) =>
-  CATEGORIES.find((c) => c.id === id)?.label || "Other";
+export const getCategoryLabel = (id) => {
+  const found = CATEGORIES.find((c) => c.id === id);
+  if (found) return found.label;
+  if (!id) return "Other";
+  // Dynamic categories created by admins: prettify the slug
+  return id
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+};
