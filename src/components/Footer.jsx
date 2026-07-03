@@ -18,7 +18,7 @@ export const Footer = () => {
           </div>
 
           <p className="mt-5 max-w-md text-sm leading-6 text-gray-400">
-            A modern marketplace platform helping RIT students safely buy, sell, and connect with others on campus.
+            A modern marketplace platform helping students safely buy, sell, and connect with others on campus.
           </p>
 
           {supportEmail && (
