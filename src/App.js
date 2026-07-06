@@ -20,6 +20,12 @@ import { MaintenanceGate } from "./components/MaintenanceGate";
 import { AdminRoute } from "./components/AdminRoute";
 import AdminLayout from "./components/admin/AdminLayout";
 import { AdminDashboard, ListingsManager, UsersManager, ReportsManager, CategoriesManager, WebsiteSettings, MaintenanceManager, Analytics, AdminLogs } from "./pages/admin/AdminPages";
+import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
+import TermsOfService from "./pages/legal/TermsOfService";
+import CommunityGuidelines from "./pages/legal/CommunityGuidelines";
+import AboutUs from "./pages/legal/AboutUs";
+import ContactUs from "./pages/legal/ContactUs";
+import FAQ from "./pages/legal/FAQ";
 import "@/App.css";
 
 const Shell = ({ children }) => (
@@ -28,6 +34,19 @@ const Shell = ({ children }) => (
     <Navbar />
     <GreetingBanner />
     <AnimatePresence mode="wait">{children}</AnimatePresence>
+    <Footer />
+  </div>
+);
+
+// Same chrome as Shell, but without auth-only banners — used for the
+// public legal/informational pages, which must also be reachable from
+// the registration screen before an account exists.
+const PublicShell = ({ children }) => (
+  <div className="min-h-screen bg-[#F8F9FA] flex flex-col">
+    <Navbar />
+    <div className="flex-1">
+      <AnimatePresence mode="wait">{children}</AnimatePresence>
+    </div>
     <Footer />
   </div>
 );
@@ -48,6 +67,14 @@ function App() {
         <MaintenanceGate><Routes>
           <Route path="/login" element={<AuthPage />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
+
+          {/* Public legal & informational pages */}
+          <Route path="/privacy" element={<PublicShell><PrivacyPolicy /></PublicShell>} />
+          <Route path="/terms" element={<PublicShell><TermsOfService /></PublicShell>} />
+          <Route path="/guidelines" element={<PublicShell><CommunityGuidelines /></PublicShell>} />
+          <Route path="/about" element={<PublicShell><AboutUs /></PublicShell>} />
+          <Route path="/contact" element={<PublicShell><ContactUs /></PublicShell>} />
+          <Route path="/faq" element={<PublicShell><FAQ /></PublicShell>} />
 
           <Route
             path="/"

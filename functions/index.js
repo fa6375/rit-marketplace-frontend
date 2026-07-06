@@ -48,12 +48,12 @@ exports.onReportCreated = onDocumentCreated(
     });
 
     const isListing = report.type === "listing" || Boolean(report.listingId);
-    const subject = `[RIT Marketplace] New ${isListing ? "listing" : "general"} report: ${
+    const subject = `[Campus Marketplace] New ${isListing ? "listing" : "general"} report: ${
       report.categoryLabel || report.category || "Uncategorized"
     }`;
 
     const lines = [
-      `A new report was submitted on RIT Marketplace.`,
+      `A new report was submitted on Campus Marketplace.`,
       ``,
       `Type:        ${isListing ? "Listing report" : "General report"}`,
       `Category:    ${report.categoryLabel || report.category || "—"}`,
@@ -74,7 +74,7 @@ exports.onReportCreated = onDocumentCreated(
 
     try {
       await transporter.sendMail({
-        from: `"RIT Marketplace Reports" <${user}>`,
+        from: `"Campus Marketplace Reports" <${user}>`,
         to,
         subject,
         text: lines.join("\n"),

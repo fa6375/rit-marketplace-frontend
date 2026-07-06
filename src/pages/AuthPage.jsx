@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
@@ -13,6 +13,15 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [agreements, setAgreements] = useState({
+    terms: false,
+    privacy: false,
+    guidelines: false,
+  });
+  const allAgreed = agreements.terms && agreements.privacy && agreements.guidelines;
+
+  const toggleAgreement = (key) =>
+    setAgreements((prev) => ({ ...prev, [key]: !prev[key] }));
   const { login, signup, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,6 +72,13 @@ export default function AuthPage() {
       } else {
         if (password.length < 6) {
           toast.error("Password must be at least 6 characters");
+          setBusy(false);
+          return;
+        }
+        if (!allAgreed) {
+          toast.error(
+            "Please agree to the Terms of Service, Privacy Policy, and Community Guidelines to continue."
+          );
           setBusy(false);
           return;
         }
@@ -215,10 +231,88 @@ export default function AuthPage() {
                 </div>
 {mode === "login" && <div className="text-right mt-2"><button type="button" onClick={handleForgotPassword} className="text-sm text-[#FF5A1F] hover:underline">Forgot password?</button></div>}
 
+                {mode === "signup" && (
+                  <div className="space-y-3 rounded-xl bg-white border border-gray-200 p-4" data-testid="signup-agreements">
+                    {[
+                      {
+                        key: "terms",
+                        testId: "agree-terms-checkbox",
+                        label: (
+                          <>
+                            I have read and agree to the{" "}
+                            <Link
+                              to="/terms"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-[#FF5A1F] hover:underline"
+                            >
+                              Terms of Service
+                            </Link>
+                            .
+                          </>
+                        ),
+                      },
+                      {
+                        key: "privacy",
+                        testId: "agree-privacy-checkbox",
+                        label: (
+                          <>
+                            I have read and agree to the{" "}
+                            <Link
+                              to="/privacy"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-[#FF5A1F] hover:underline"
+                            >
+                              Privacy Policy
+                            </Link>
+                            .
+                          </>
+                        ),
+                      },
+                      {
+                        key: "guidelines",
+                        testId: "agree-guidelines-checkbox",
+                        label: (
+                          <>
+                            I agree to follow the{" "}
+                            <Link
+                              to="/guidelines"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-[#FF5A1F] hover:underline"
+                            >
+                              Community Guidelines
+                            </Link>
+                            .
+                          </>
+                        ),
+                      },
+                    ].map(({ key, testId, label }) => (
+                      <label
+                        key={key}
+                        className="flex items-start gap-3 cursor-pointer select-none"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={agreements[key]}
+                          onChange={() => toggleAgreement(key)}
+                          required
+                          data-testid={testId}
+                          className="mt-0.5 h-4 w-4 shrink-0 rounded border-gray-300 accent-[#FF5A1F] cursor-pointer"
+                        />
+                        <span className="text-sm leading-snug text-gray-600">
+                          {label}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+
                 <motion.button
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={busy}
+                  disabled={busy || (mode === "signup" && !allAgreed)}
                   data-testid="auth-submit-btn"
                   className="w-full inline-flex items-center justify-center gap-2 bg-[#FF5A1F] hover:bg-[#E04812] disabled:opacity-60 text-white font-medium py-3 rounded-full transition-colors mt-2 shadow-[0_8px_24px_rgba(255,90,31,0.25)]"
                 >

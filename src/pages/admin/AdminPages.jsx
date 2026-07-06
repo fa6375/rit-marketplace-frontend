@@ -212,7 +212,7 @@ export function CategoriesManager(){
 }
 
 const settingsFields=[
-  ['websiteName','Website name','RIT Marketplace','Shown in the navbar, footer and browser tab.'],
+  ['websiteName','Website name','Campus Marketplace','Shown in the navbar, footer and browser tab.'],
   ['homepageHeroText','Homepage hero text','Discover student listings.','The big headline on the homepage.'],
   ['announcement','Announcement banner','','Overrides the personalized greeting banner under the navbar. Leave empty to show the greeting + rotating quotes.'],
   ['supportEmail','Support email','support@example.com','Shown in the footer and on banned/suspended screens.'],

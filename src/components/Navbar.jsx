@@ -58,6 +58,17 @@ export const Navbar = () => {
 
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
+            {!user ? (
+              <Link to="/login" data-testid="navbar-signin-link">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  className="inline-flex items-center gap-2 bg-[#FF5A1F] hover:bg-[#E04812] text-white text-sm font-medium px-4 sm:px-5 py-2 rounded-full transition-colors"
+                >
+                  Sign in
+                </motion.button>
+              </Link>
+            ) : (
+              <>
             <Link to="/create" data-testid="navbar-create-listing-link">
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -138,10 +149,12 @@ export const Navbar = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+              </>
+            )}
           </div>
         </div>
       </div>
-      <ReportDialog open={reportOpen} onOpenChange={setReportOpen} />
+      {user && <ReportDialog open={reportOpen} onOpenChange={setReportOpen} />}
     </header>
   );
 };

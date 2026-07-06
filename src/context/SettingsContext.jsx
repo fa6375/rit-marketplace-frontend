@@ -1,9 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { hasPageMetaOverride } from "../lib/pageMetaState";
 
 export const DEFAULT_SETTINGS = {
-  websiteName: "RIT Marketplace",
+  websiteName: "Campus Marketplace",
   homepageHeroText: "Discover student listings.",
   announcement: "",
   supportEmail: "",
@@ -40,9 +41,12 @@ export const SettingsProvider = ({ children }) => {
     );
   }, []);
 
-  // Keep the browser tab title in sync with the configured website name
+  // Keep the browser tab title in sync with the configured website name,
+  // unless a page is currently managing its own title via usePageMeta.
   useEffect(() => {
-    if (settings.websiteName) document.title = settings.websiteName;
+    if (settings.websiteName && !hasPageMetaOverride()) {
+      document.title = settings.websiteName;
+    }
   }, [settings.websiteName]);
 
   return (

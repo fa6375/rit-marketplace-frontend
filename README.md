@@ -1,12 +1,12 @@
-# RIT Marketplace
+# Campus Marketplace
 
-RIT Marketplace is a student-focused online marketplace designed for the RIT Croatia community. The platform allows students to buy, sell, and discover items in a secure and organized environment tailored specifically to campus life.
+Campus Marketplace is a student-focused online marketplace designed for campus communities. The platform allows students to buy, sell, and discover items in a secure and organized environment tailored specifically to campus life.
 
 ## Overview
 
-Finding buyers and sellers through group chats and social media can be frustrating and inefficient. RIT Marketplace provides a centralized platform where students can list items, browse available products, and connect with other members of the RIT community.
+Finding buyers and sellers through group chats and social media can be frustrating and inefficient. Campus Marketplace provides a centralized platform where students can list items, browse available products, and connect with other members of their campus community.
 
-Whether you are selling textbooks after a semester, looking for affordable electronics, or searching for furniture before moving into a new apartment, RIT Marketplace makes the process simple and accessible.
+Whether you are selling textbooks after a semester, looking for affordable electronics, or searching for furniture before moving into a new apartment, Campus Marketplace makes the process simple and accessible.
 
 ## Features
 
@@ -111,7 +111,7 @@ Faraj Aliyev
 
 ## License
 
-This project was developed for educational and community purposes within RIT Croatia.
+This project was developed for educational and community purposes for student campus communities.
 
 ## Admin deployment
 
