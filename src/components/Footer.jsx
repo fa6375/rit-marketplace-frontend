@@ -5,6 +5,7 @@ import { useSettings } from '../context/SettingsContext';
 const exploreLinks = [
   { label: 'Home', to: '/' },
   { label: 'About', to: '/about' },
+  { label: 'Founders', to: '/about#founders' },
   { label: 'FAQ', to: '/faq' },
   { label: 'Contact', to: '/contact' },
   { label: 'Report Listing', to: '/contact?topic=report' },

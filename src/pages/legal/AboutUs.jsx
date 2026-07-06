@@ -1,7 +1,32 @@
-import { Link } from "react-router-dom";
-import { Target, Telescope, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { Target, Telescope, ShieldCheck, Sparkles, Users, Mail, Quote } from "lucide-react";
 import { useSettings } from "../../context/SettingsContext";
 import { LegalPageLayout } from "../../components/LegalPageLayout";
+
+const FOUNDERS = [
+  {
+    name: "Faraj Aliyev",
+    role: "Founder",
+    email: "fa6375@rit.edu",
+    quote:
+      "Great ideas start small — ours started with a textbook nobody wanted to carry home.",
+  },
+  {
+    name: "Andrej Biljaka",
+    role: "Co-Founder",
+    email: "ab1538@rit.edu",
+    quote:
+      "A campus is a community. We just gave it a marketplace to match.",
+  },
+  {
+    name: "Fran Brezanin",
+    role: "Co-Founder",
+    email: "fb1060@rit.edu",
+    quote:
+      "Build something students actually need, and keep it simple enough that they love using it.",
+  },
+];
 
 const SECTIONS = [
   {
@@ -33,6 +58,15 @@ const SECTIONS = [
 
 export default function AboutUs() {
   const { websiteName } = useSettings();
+  const { hash } = useLocation();
+
+  // Support deep links like /about#founders (React Router doesn't
+  // scroll to hash targets automatically).
+  useEffect(() => {
+    if (!hash) return;
+    const el = document.querySelector(hash);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [hash]);
 
   return (
     <LegalPageLayout
@@ -63,6 +97,41 @@ export default function AboutUs() {
           </section>
         ))}
       </div>
+
+      <section id="founders" className="mt-12">
+        <p className="text-xs uppercase tracking-[0.22em] font-semibold text-[#FF5A1F]">
+          The people behind it
+        </p>
+        <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900 mt-2">
+          Founders
+        </h2>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3" data-testid="founders-section">
+          {FOUNDERS.map(({ name, role, email, quote }) => (
+            <div
+              key={email}
+              className="flex flex-col rounded-2xl bg-white border border-gray-200 p-6 transition-colors hover:border-[#FF5A1F]/40"
+            >
+              <Quote className="w-5 h-5 text-[#FF5A1F]" />
+              <p className="mt-3 flex-1 text-sm italic leading-relaxed text-gray-600">
+                "{quote}"
+              </p>
+              <div className="mt-5 border-t border-gray-100 pt-4">
+                <h3 className="font-semibold tracking-tight text-gray-900">
+                  {name}
+                </h3>
+                <p className="text-sm font-medium text-[#FF5A1F]">{role}</p>
+                <a
+                  href={`mailto:${email}`}
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#FF5A1F] transition-colors break-all"
+                >
+                  <Mail size={14} className="shrink-0" />
+                  {email}
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <div className="mt-10 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-6 sm:p-8 text-white">
         <h2 className="text-xl sm:text-2xl font-semibold tracking-tight">
