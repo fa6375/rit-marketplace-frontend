@@ -8,12 +8,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Plus, LogOut, User, Package2, Store, ShieldCheck, Flag } from "lucide-react";
+import { Plus, LogOut, User, Package2, Store, ShieldCheck, Flag, Heart, HandCoins, BarChart3, SearchCheck, UserCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useSettings } from "../context/SettingsContext";
 import { ThemeToggle } from "./ThemeToggle";
 import { ReportDialog } from "./ReportDialog";
+import { NotificationsBell } from "./NotificationsBell";
 
 export const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -56,6 +57,16 @@ export const Navbar = () => {
             </span>
           </Link>
 
+          {user && (
+            <Link
+              to="/lost-found"
+              data-testid="navbar-lostfound-link"
+              className="hidden md:inline-flex items-center gap-1.5 text-sm font-medium text-gray-300 hover:text-white transition-colors ml-6 mr-auto"
+            >
+              <SearchCheck className="w-4 h-4" /> Lost &amp; Found
+            </Link>
+          )}
+
           <div className="flex items-center gap-2 sm:gap-3">
             <ThemeToggle />
             {!user ? (
@@ -69,6 +80,7 @@ export const Navbar = () => {
               </Link>
             ) : (
               <>
+            <NotificationsBell />
             <Link to="/create" data-testid="navbar-create-listing-link">
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -115,6 +127,41 @@ export const Navbar = () => {
                   data-testid="navbar-my-listings-item"
                 >
                   <Package2 className="w-4 h-4 mr-2" /> My listings
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate(`/seller/${user.uid}`)}
+                  className="cursor-pointer"
+                  data-testid="navbar-profile-item"
+                >
+                  <UserCircle2 className="w-4 h-4 mr-2" /> My profile
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate("/saved")}
+                  className="cursor-pointer"
+                  data-testid="navbar-saved-item"
+                >
+                  <Heart className="w-4 h-4 mr-2" /> Saved listings
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate("/offers")}
+                  className="cursor-pointer"
+                  data-testid="navbar-offers-item"
+                >
+                  <HandCoins className="w-4 h-4 mr-2" /> Offers
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate("/analytics")}
+                  className="cursor-pointer"
+                  data-testid="navbar-analytics-item"
+                >
+                  <BarChart3 className="w-4 h-4 mr-2" /> Seller analytics
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => navigate("/lost-found")}
+                  className="cursor-pointer md:hidden"
+                  data-testid="navbar-lostfound-item"
+                >
+                  <SearchCheck className="w-4 h-4 mr-2" /> Lost &amp; Found
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => navigate("/account")}

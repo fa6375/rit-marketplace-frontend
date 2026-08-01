@@ -7,13 +7,25 @@ service cloud.firestore {
     function isAdmin() {
       return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
+    function onlyKeys(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
 
     match /users/{userId} {
-      allow read: if isOwner(userId) || isAdmin();
+      // Public seller profiles: any signed-in student can view profiles
+      // (listings already expose ownerName/ownerEmail, so nothing new leaks).
+      allow read: if signedIn();
       allow create: if isOwner(userId) && request.resource.data.role == "user";
-      allow update: if isAdmin() || (isOwner(userId)
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.status == resource.data.status);
+      allow update: if isAdmin()
+        // Owners can edit their profile but never their own role/status.
+        || (isOwner(userId)
+          && request.resource.data.role == resource.data.role
+          && request.resource.data.status == resource.data.status)
+        // Other users may only touch the public counters, and only via
+        // the app's transactional counter updates.
+        || (signedIn() && onlyKeys(["followersCount"]))
+        || (signedIn() && onlyKeys(["profileViews"]))
+        || (signedIn() && onlyKeys(["offersReceivedCount"]));
       allow delete: if isAdmin();
     }
 
@@ -25,15 +37,29 @@ service cloud.firestore {
         && request.resource.data.description is string
         && request.resource.data.price is number
         && request.resource.data.category is string;
-      allow update: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          "title", "description", "price", "category", "contact", "imageUrl",
-          "imagePath", "updatedAt", "ownerEmail", "ownerName"
-        ]));
+      allow update: if isAdmin()
+        || (signedIn() && resource.data.ownerId == request.auth.uid
+          && request.resource.data.ownerId == resource.data.ownerId
+          && onlyKeys([
+            "title", "description", "price", "category", "contact", "imageUrl",
+            "imagePath", "imageSize", "updatedAt", "ownerEmail", "ownerName",
+            "ownerPhotoURL", "type", "condition", "location", "locationName",
+            "priceHistory", "originalPrice", "sold", "soldAt"
+          ]))
+        // Any signed-in user may bump exactly one engagement counter —
+        // used by the unique-view / save / offer transactions.
+        || (signedIn() && onlyKeys(["views"]))
+        || (signedIn() && onlyKeys(["savesCount"]))
+        || (signedIn() && onlyKeys(["offersCount"]));
       allow delete: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
     }
 
     match /categories/{categoryId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /locations/{locationId} {
       allow read: if signedIn();
       allow create, update, delete: if isAdmin();
     }
@@ -51,6 +77,119 @@ service cloud.firestore {
     match /adminLogs/{logId} {
       allow read, create: if isAdmin();
       allow update, delete: if false;
+    }
+
+    // Follows: deterministic id {followerId}_{sellerId} enforced.
+    match /follows/{followId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.followerId == request.auth.uid
+        && request.resource.data.sellerId is string
+        && request.resource.data.followerId != request.resource.data.sellerId
+        && followId == request.auth.uid + "_" + request.resource.data.sellerId;
+      allow delete: if isAdmin() || (signedIn() && resource.data.followerId == request.auth.uid);
+      allow update: if false;
+    }
+
+    // Saves: deterministic id {uid}_{listingId}; users manage only theirs.
+    match /saves/{saveId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && saveId == request.auth.uid + "_" + request.resource.data.listingId;
+      allow update: if signedIn() && resource.data.uid == request.auth.uid
+        && onlyKeys(["collectionId", "updatedAt"]);
+      allow delete: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    match /wishlistCollections/{collectionId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // Unique views: one immutable doc per (listing, viewer).
+    match /views/{viewId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && viewId == request.resource.data.listingId + "_" + request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /profileViews/{viewId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.sellerId != request.auth.uid
+        && viewId == request.resource.data.sellerId + "_" + request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    // Offers: only the buyer and seller (and admins) may read a negotiation.
+    match /offers/{offerId} {
+      allow read: if isAdmin() || (signedIn()
+        && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid));
+      allow create: if signedIn()
+        && request.resource.data.buyerId == request.auth.uid
+        && request.resource.data.buyerId != request.resource.data.sellerId
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && offerId == request.resource.data.listingId + "_" + request.auth.uid;
+      allow update: if signedIn()
+        && (resource.data.buyerId == request.auth.uid || resource.data.sellerId == request.auth.uid)
+        && request.resource.data.buyerId == resource.data.buyerId
+        && request.resource.data.sellerId == resource.data.sellerId
+        && request.resource.data.listingId == resource.data.listingId
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.status in ["pending", "countered", "accepted", "rejected", "expired", "withdrawn"];
+      allow delete: if isAdmin();
+    }
+
+    // Notifications: anyone signed in can create one for another user
+    // (follows, offers, likes, price drops), but only the recipient can
+    // read, mark read, or delete it.
+    match /notifications/{notificationId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.userId is string
+        && request.resource.data.title is string
+        && request.resource.data.title.size() < 200
+        && request.resource.data.body is string
+        && request.resource.data.body.size() < 500
+        && request.resource.data.read == false;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid
+        && onlyKeys(["read"]);
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Lost & Found: community posts; owners and admins manage them.
+    match /lostItems/{itemId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.auth.token.email_verified == true
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.description is string;
+      allow update: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId);
+      allow delete: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
+    }
+
+    // Achievement definitions are public to read, admin-managed.
+    match /achievements/{achievementId} {
+      allow read: if signedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Unlocked achievements: immutable once earned, deterministic id.
+    match /userAchievements/{unlockId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && unlockId == request.auth.uid + "_" + request.resource.data.achievementId;
+      allow update: if false;
+      allow delete: if isAdmin();
     }
   }
 }

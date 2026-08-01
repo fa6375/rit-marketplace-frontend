@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { orderBy } from "firebase/firestore";
-import { LayoutDashboard, Tags, Users, Flag, FolderKanban, BarChart3, Settings, Wrench, ScrollText, LogOut, Menu, Search, Bell, X } from "lucide-react";
+import { LayoutDashboard, Tags, Users, Flag, FolderKanban, BarChart3, Settings, Wrench, ScrollText, LogOut, Menu, Search, Bell, X, MapPin, SearchCheck, Trophy, HandCoins, HeartHandshake } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useCollection } from "../../hooks/useCollection";
 import { MaintenanceBanner } from "../MaintenanceBanner";
@@ -10,7 +10,10 @@ import { MaintenanceBanner } from "../MaintenanceBanner";
 const links = [
   ["Dashboard", "/admin/dashboard", LayoutDashboard], ["Listings", "/admin/listings", Tags],
   ["Users", "/admin/users", Users], ["Reports", "/admin/reports", Flag],
-  ["Categories", "/admin/categories", FolderKanban], ["Analytics", "/admin/analytics", BarChart3],
+  ["Categories", "/admin/categories", FolderKanban], ["Locations", "/admin/locations", MapPin],
+  ["Offers", "/admin/offers", HandCoins], ["Lost & Found", "/admin/lost-found", SearchCheck],
+  ["Achievements", "/admin/achievements", Trophy], ["Community", "/admin/community", HeartHandshake],
+  ["Analytics", "/admin/analytics", BarChart3],
   ["Website Settings", "/admin/settings", Settings], ["Maintenance", "/admin/maintenance", Wrench],
   ["Admin Logs", "/admin/logs", ScrollText],
 ];

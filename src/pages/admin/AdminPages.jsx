@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { addDoc, collection, deleteDoc, doc, orderBy, serverTimestamp, setDoc, updateDoc, writeBatch } from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { collection, deleteDoc, doc, orderBy, serverTimestamp, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Users, Tags, Flag, Star, Activity, HardDrive, Search, Trash2, EyeOff, Sparkles, Shield, Ban, Check, GripVertical } from "lucide-react";
 import { toast } from "sonner";
@@ -9,6 +9,7 @@ import { useCollection } from "../../hooks/useCollection";
 import { useCategories } from "../../hooks/useCategories";
 import { Badge, Button, Empty, Input, PageHeader, Panel, StatCard, formatDate } from "../../components/admin/AdminUI";
 import { bulkUpdateListings, deleteListing, deleteUserAccount, logAdminAction, updateListing, updateUser } from "../../services/adminService";
+import { LISTING_TYPES } from "../../lib/listingTypes";
 
 const dayKey = (timestamp) => timestamp?.toDate?.().toLocaleDateString(undefined, { month: "short", day: "numeric" }) || "Unknown";
 const groupByDay = (items, field = "createdAt") => Object.entries(items.reduce((a, item) => { const key = dayKey(item[field]); a[key] = (a[key] || 0) + 1; return a; }, {})).map(([name, count]) => ({ name, count })).slice(-14);
@@ -224,8 +225,10 @@ export function WebsiteSettings(){
   const {data}=useCollection("settings");
   const existing=data.find(x=>x.id==="website");
   const [form,setForm]=useState({});
+  const [types,setTypes]=useState({});
   const [saving,setSaving]=useState(false);
   const value=(key,fallback)=>form[key]??existing?.[key]??fallback;
+  const typeValue=(id)=>types[id]??(existing?.listingTypes?.[id]!==false);
   const save=async(e)=>{
     e.preventDefault();
     setSaving(true);
@@ -238,6 +241,7 @@ export function WebsiteSettings(){
       if(!Number.isFinite(maxListings)||maxListings<=0){toast.error("Maximum listings per user must be a positive number");setSaving(false);return}
       payload.maximumUploadSize=upload;
       payload.maximumListingsPerUser=maxListings;
+      payload.listingTypes=Object.fromEntries(LISTING_TYPES.filter(t=>t.id!=="product").map(t=>[t.id,typeValue(t.id)]));
       await setDoc(doc(db,"settings","website"),{...payload,updatedAt:serverTimestamp()},{merge:true});
       await logAdminAction(user,"Updated website settings",payload);
       toast.success("Settings saved — changes are live on the website")
@@ -252,6 +256,17 @@ export function WebsiteSettings(){
         <Input type={key.startsWith("maximum")?"number":"text"} min={key.startsWith("maximum")?1:undefined} value={value(key,fallback)} onChange={e=>setForm(f=>({...f,[key]:e.target.value}))} className="w-full"/>
         <span className="mt-1.5 block text-xs text-slate-600">{hint}</span>
       </label>)}
+    <div className="md:col-span-2 border-t border-white/10 pt-6">
+      <span className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate-400">Campus services — listing types</span>
+      <p className="mb-4 text-xs text-slate-600">Enable the listing types students can post beyond products. Disabled types are hidden from the create form and homepage filters.</p>
+      <div className="flex flex-wrap gap-2">
+        {LISTING_TYPES.filter(t=>t.id!=="product").map(t=>
+          <button type="button" key={t.id} onClick={()=>setTypes(v=>({...v,[t.id]:!typeValue(t.id)}))}
+            className={`rounded-full border px-4 py-2 text-sm font-medium transition ${typeValue(t.id)?"border-orange-500/40 bg-orange-500/15 text-orange-400":"border-white/10 bg-white/5 text-slate-500"}`}>
+            {t.label}{typeValue(t.id)?" ✓":""}
+          </button>)}
+      </div>
+    </div>
     <div className="md:col-span-2"><Button type="submit" disabled={saving}>{saving?"Saving…":"Save settings"}</Button></div>
   </form></Panel></>
 }

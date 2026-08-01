@@ -2,21 +2,27 @@ import { useEffect, useState } from "react";
 import {
   collection,
   onSnapshot,
-  orderBy,
   query,
   where,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { useAuth } from "../context/AuthContext";
+import { checkAchievements } from "../services/achievementsService";
 import { ListingCard } from "../components/ListingCard";
 import { EmptyState } from "../components/EmptyState";
 import { ListingSkeletonGrid } from "../components/ListingSkeleton";
 import { motion } from "framer-motion";
 
 export default function MyListings() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Auto-unlock achievements from real activity whenever this page loads.
+  useEffect(() => {
+    if (user && profile && !loading) checkAchievements(user, profile, items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, profile?.followersCount, loading, items.length]);
 
   useEffect(() => {
     if (!user) return;

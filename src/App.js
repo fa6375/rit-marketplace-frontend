@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SettingsProvider } from "./context/SettingsContext";
+import { CompareProvider } from "./context/CompareContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
@@ -16,10 +17,19 @@ import CreateListing from "./pages/CreateListing";
 import ListingDetails from "./pages/ListingDetails";
 import MyListings from "./pages/MyListings";
 import AccountSettings from "./pages/AccountSettings";
+import SellerProfile from "./pages/SellerProfile";
+import SavedListings from "./pages/SavedListings";
+import Offers from "./pages/Offers";
+import CompareListings from "./pages/CompareListings";
+import SellerAnalytics from "./pages/SellerAnalytics";
+import LostFound from "./pages/LostFound";
+import LostFoundCreate from "./pages/LostFoundCreate";
+import { CompareBar } from "./components/CompareBar";
 import { MaintenanceGate } from "./components/MaintenanceGate";
 import { AdminRoute } from "./components/AdminRoute";
 import AdminLayout from "./components/admin/AdminLayout";
 import { AdminDashboard, ListingsManager, UsersManager, ReportsManager, CategoriesManager, WebsiteSettings, MaintenanceManager, Analytics, AdminLogs } from "./pages/admin/AdminPages";
+import { LocationsManager, LostFoundManager, AchievementsManager, OffersManager, CommunityStats } from "./pages/admin/AdminExtraPages";
 import PrivacyPolicy from "./pages/legal/PrivacyPolicy";
 import TermsOfService from "./pages/legal/TermsOfService";
 import CommunityGuidelines from "./pages/legal/CommunityGuidelines";
@@ -34,6 +44,7 @@ const Shell = ({ children }) => (
     <Navbar />
     <GreetingBanner />
     <AnimatePresence mode="wait">{children}</AnimatePresence>
+    <CompareBar />
     <Footer />
   </div>
 );
@@ -56,6 +67,7 @@ function App() {
     <ThemeProvider>
     <SettingsProvider>
     <AuthProvider>
+    <CompareProvider>
       <BrowserRouter>
         <Toaster
           richColors
@@ -136,6 +148,76 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/seller/:uid"
+            element={
+              <ProtectedRoute>
+                <Shell>
+                  <SellerProfile />
+                </Shell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/saved"
+            element={
+              <ProtectedRoute>
+                <Shell>
+                  <SavedListings />
+                </Shell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/offers"
+            element={
+              <ProtectedRoute>
+                <Shell>
+                  <Offers />
+                </Shell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/compare"
+            element={
+              <ProtectedRoute>
+                <Shell>
+                  <CompareListings />
+                </Shell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <Shell>
+                  <SellerAnalytics />
+                </Shell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lost-found"
+            element={
+              <ProtectedRoute>
+                <Shell>
+                  <LostFound />
+                </Shell>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lost-found/new"
+            element={
+              <ProtectedRoute>
+                <Shell>
+                  <LostFoundCreate />
+                </Shell>
+              </ProtectedRoute>
+            }
+          />
           <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
@@ -143,6 +225,11 @@ function App() {
             <Route path="users" element={<UsersManager />} />
             <Route path="reports" element={<ReportsManager />} />
             <Route path="categories" element={<CategoriesManager />} />
+            <Route path="locations" element={<LocationsManager />} />
+            <Route path="offers" element={<OffersManager />} />
+            <Route path="lost-found" element={<LostFoundManager />} />
+            <Route path="achievements" element={<AchievementsManager />} />
+            <Route path="community" element={<CommunityStats />} />
             <Route path="settings" element={<WebsiteSettings />} />
             <Route path="maintenance" element={<MaintenanceManager />} />
             <Route path="analytics" element={<Analytics />} />
@@ -151,6 +238,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes></MaintenanceGate>
       </BrowserRouter>
+    </CompareProvider>
     </AuthProvider>
     </SettingsProvider>
     </ThemeProvider>
