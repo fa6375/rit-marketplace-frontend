@@ -5,6 +5,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SettingsProvider } from "./context/SettingsContext";
 import { CompareProvider } from "./context/CompareContext";
+import { TourProvider } from "./context/TourContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Navbar } from "./components/Navbar";
 import { Footer } from "./components/Footer";
@@ -69,6 +70,7 @@ function App() {
     <AuthProvider>
     <CompareProvider>
       <BrowserRouter>
+        <TourProvider>
         <Toaster
           richColors
           position="top-center"
@@ -237,6 +239,7 @@ function App() {
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes></MaintenanceGate>
+        </TourProvider>
       </BrowserRouter>
     </CompareProvider>
     </AuthProvider>

@@ -182,6 +182,7 @@ export function SaveButton({ listing, variant = "card" }) {
           }}
           aria-label={saved ? "Manage saved listing" : "Save listing"}
           data-testid={`save-btn-${listing.id}`}
+          data-tour="save-listing"
           className={`w-8 h-8 rounded-full backdrop-blur flex items-center justify-center border transition-all ${
             saved
               ? "bg-white/95 border-orange-200 text-[#FF5A1F]"

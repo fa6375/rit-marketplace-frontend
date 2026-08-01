@@ -84,6 +84,7 @@ export function NotificationsBell() {
         <button
           aria-label="Notifications"
           data-testid="navbar-notifications-btn"
+          data-tour="notifications"
           className="relative w-9 h-9 rounded-full flex items-center justify-center text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
         >
           <Bell className="w-[18px] h-[18px]" />

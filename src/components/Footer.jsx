@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Mail, ShoppingBag, ShieldCheck, Users } from 'lucide-react';
+import { Mail, ShoppingBag, ShieldCheck, Users, SearchCheck, Sparkles } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext';
+import { useTour } from '../context/TourContext';
 
 const exploreLinks = [
   { label: 'Home', to: '/' },
@@ -8,6 +9,7 @@ const exploreLinks = [
   { label: 'Founders', to: '/about#founders' },
   { label: 'FAQ', to: '/faq' },
   { label: 'Contact', to: '/contact' },
+  { label: 'Lost & Found', to: '/lost-found' },
   { label: 'Report Listing', to: '/contact?topic=report' },
 ];
 
@@ -25,6 +27,7 @@ const accountLinks = [
 
 export const Footer = () => {
   const { websiteName, supportEmail } = useSettings();
+  const { startTour } = useTour();
   const name = websiteName || 'Campus Marketplace';
 
   return (
@@ -63,6 +66,14 @@ export const Footer = () => {
               <Users size={16} />
               Student Community
             </div>
+            <Link
+              to="/lost-found"
+              className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 backdrop-blur-sm transition hover:bg-white/20 hover:text-orange-400"
+              data-testid="footer-lostfound-card"
+            >
+              <SearchCheck size={16} />
+              Lost &amp; Found
+            </Link>
           </div>
         </div>
 
@@ -115,8 +126,19 @@ export const Footer = () => {
         </div>
       </div>
 
-      <div className="border-t border-white/10 px-6 py-5 text-center text-sm text-gray-400">
-        © 2026 {name} • Connecting students through smarter campus trading.
+      <div className="border-t border-white/10 px-6 py-5">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 text-center text-sm text-gray-400 sm:flex-row sm:text-left">
+          <p>© 2026 {name} • Connecting students through smarter campus trading.</p>
+          <button
+            type="button"
+            onClick={startTour}
+            className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm text-gray-300 backdrop-blur-sm transition hover:bg-white/20 hover:text-orange-400"
+            data-testid="footer-tour-button"
+          >
+            <Sparkles size={15} />
+            Take a Tour
+          </button>
+        </div>
       </div>
     </footer>
   );

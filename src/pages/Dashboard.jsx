@@ -172,7 +172,7 @@ export default function Dashboard() {
 
       {/* Search + suggestions */}
       <div className="mt-8">
-        <div className="relative max-w-xl" ref={searchWrapRef}>
+        <div className="relative max-w-xl" ref={searchWrapRef} data-tour="search">
           <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
@@ -267,7 +267,10 @@ export default function Dashboard() {
         )}
 
         {/* Category pills */}
-        <div className="flex gap-2 mt-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none">
+        <div
+          className="flex gap-2 mt-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-none"
+          data-tour="categories"
+        >
           <FilterPill
             active={activeCategory === "all"}
             onClick={() => setActiveCategory("all")}

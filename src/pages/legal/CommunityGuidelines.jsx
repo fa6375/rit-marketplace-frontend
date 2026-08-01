@@ -8,6 +8,8 @@ import {
   PackageX,
   EyeOff,
   MailWarning,
+  HandCoins,
+  SearchCheck,
   Flag,
   Gavel,
 } from "lucide-react";
@@ -15,11 +17,18 @@ import { useSettings } from "../../context/SettingsContext";
 import { LegalPageLayout, LegalSection } from "../../components/LegalPageLayout";
 import { LEGAL_LAST_UPDATED } from "../../lib/siteInfo";
 
+/**
+ * Community Guidelines.
+ *
+ * IMPORTANT: written to match the actual features of the application
+ * (listings, offers, Lost & Found, in-app reporting, human moderation).
+ * Keep in sync when features change.
+ */
 const GUIDELINES = [
   {
     icon: Heart,
     title: "Respect Other Users",
-    body: "Treat every member of the community with courtesy. Be honest in your listings, reply to messages in good faith, and show up on time for agreed meetups. Discrimination or hostility of any kind has no place here.",
+    body: "Treat every member of the community with courtesy. Be honest in your listings, respond to offers in good faith, and show up on time for agreed meetups. Discrimination or hostility of any kind has no place here.",
   },
   {
     icon: ShieldAlert,
@@ -27,9 +36,14 @@ const GUIDELINES = [
     body: "Never attempt to deceive other users. This includes fake payment confirmations, bait-and-switch tactics, phishing links, taking payment without handing over the item, and any other form of dishonest dealing.",
   },
   {
+    icon: HandCoins,
+    title: "Make Offers in Good Faith",
+    body: "Only make an offer if you genuinely intend to buy at that price. Don't lowball to harass a seller, and don't abandon offers you've had accepted. Sellers: respond to offers when you can — your response rate and typical response time are shown on your profile.",
+  },
+  {
     icon: MessageSquareOff,
     title: "No Harassment",
-    body: "Do not threaten, intimidate, stalk, or repeatedly contact users who have asked you to stop. Hate speech, bullying, and unwanted sexual advances will result in immediate action against your account.",
+    body: "Do not threaten, intimidate, stalk, or repeatedly contact users who have asked you to stop — including by phone numbers shared in Lost & Found posts. Hate speech, bullying, and unwanted advances will result in immediate action against your account.",
   },
   {
     icon: Ban,
@@ -44,22 +58,27 @@ const GUIDELINES = [
   {
     icon: PackageX,
     title: "No Stolen Goods",
-    body: "You may only list items that you legitimately own and have the right to sell. Listing stolen or found property is prohibited and may be reported to the appropriate authorities.",
+    body: "You may only list items that you legitimately own and have the right to sell. Listing stolen property is prohibited and may be reported to the appropriate authorities.",
+  },
+  {
+    icon: SearchCheck,
+    title: "Use Lost & Found Honestly",
+    body: "Lost & Found is for reuniting people with their belongings. If you find someone's item, help return it — never keep it, sell it, or demand payment for its return. Mark your own posts as found once your item is recovered.",
   },
   {
     icon: EyeOff,
     title: "No Misleading Listings",
-    body: "Describe items accurately, use real photos of the actual item, disclose defects, and price honestly. Listings that misrepresent condition, authenticity, or availability will be removed.",
+    body: "Describe items accurately, use real photos of the actual item, disclose defects, and price honestly. Price changes are recorded, and listings that misrepresent condition, authenticity, or availability will be removed.",
   },
   {
     icon: MailWarning,
     title: "No Spam",
-    body: "Do not post duplicate listings, irrelevant content, advertisements for external services, or mass unsolicited messages. Keep the marketplace clean and useful for everyone.",
+    body: "Do not post duplicate listings, irrelevant content, or advertisements for external services, and do not abuse offers or reports to flood other users with notifications. Keep the marketplace clean and useful for everyone.",
   },
   {
     icon: Flag,
     title: "Report Suspicious Activity",
-    body: "If you see a listing or user that seems fraudulent, unsafe, or against these guidelines, report it using the in-app report tools or through our Contact page. Reports are reviewed by our moderation team and help keep the community safe.",
+    body: "If a listing or user seems fraudulent, unsafe, or against these guidelines, use the Report option on the listing page, the report entry in your profile menu, or our Contact page. Every report is reviewed by a human administrator and helps keep the community safe.",
   },
 ];
 
@@ -70,10 +89,10 @@ export default function CommunityGuidelines() {
     <LegalPageLayout
       eyebrow="Community"
       title="Community Guidelines"
-      intro={`Simple rules that keep ${websiteName} a safe, trusted place for students to buy and sell.`}
+      intro={`Simple rules that keep ${websiteName} a safe, trusted place for students to buy, sell, and recover lost items.`}
       lastUpdated={LEGAL_LAST_UPDATED}
       metaTitle="Community Guidelines"
-      metaDescription="Our community guidelines: respect other users, no scams, no harassment, no illegal or counterfeit items, and how to report suspicious activity."
+      metaDescription="Our community guidelines: respect other users, make offers in good faith, use Lost & Found honestly, no scams or illegal items, and how to report suspicious activity."
       testId="guidelines-page"
     >
       <div className="grid gap-4 sm:grid-cols-2">
@@ -95,12 +114,13 @@ export default function CommunityGuidelines() {
 
       <LegalSection title="Consequences for Violations">
         <p>
-          Violations of these guidelines are handled based on their severity
-          and frequency. Depending on the situation, we may issue a warning,
-          remove or hide listings, temporarily suspend an account, or
-          permanently ban a user from the platform. Serious matters — such as
-          fraud, threats, or the sale of stolen or illegal goods — may also be
-          referred to the appropriate authorities.
+          Violations of these guidelines are reviewed by our administrators
+          and handled based on their severity and frequency. Depending on the
+          situation, we may remove or hide listings and Lost & Found posts,
+          temporarily suspend an account, or permanently ban a user from the
+          platform. Serious matters — such as fraud, threats, or the sale of
+          stolen or illegal goods — may also be referred to the appropriate
+          authorities.
         </p>
         <p className="flex items-start gap-2">
           <Gavel className="w-4 h-4 mt-0.5 shrink-0 text-[#FF5A1F]" />
