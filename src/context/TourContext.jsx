@@ -8,20 +8,31 @@ import {
   useState,
 } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Joyride, ACTIONS, EVENTS, STATUS } from "react-joyride";
+import { Joyride, EVENTS, STATUS } from "react-joyride";
 import { useAuth } from "./AuthContext";
 
 /**
- * First-time product tour, built on react-joyride.
+ * First-time product tour, built on react-joyride v3.
  *
+ * v3 API notes (differs from v2 — do not "simplify" back to v2 patterns):
+ * - Events arrive via the `onEvent` prop (v2's `callback` prop no longer
+ *   exists and is silently ignored).
+ * - Theming is done with flat top-level props (primaryColor, overlayColor,
+ *   textColor, zIndex, ...) — v2's `styles.options` object is ignored.
+ * - The tour runs uncontrolled (no `stepIndex` prop): Joyride advances
+ *   itself on Next/Previous and we only listen for the end of the tour.
+ * - `skipBeacon: true` opens each tooltip directly instead of showing a
+ *   pulsing beacon the user would have to click first.
+ *
+ * Behavior:
  * - Auto-starts once per browser for signed-in users landing on the
- *   marketplace homepage, then never again (completion is persisted in
- *   localStorage under TOUR_STORAGE_KEY).
+ *   marketplace homepage; completion is persisted in localStorage under
+ *   TOUR_STORAGE_KEY and it never auto-starts again.
  * - Can always be replayed from the "Take a Tour" button in the footer,
  *   which clears the stored flag and restarts the walkthrough.
  * - Steps are built at start time and filtered to elements that are
- *   actually visible (e.g. the desktop-only Lost & Found link is skipped
- *   on mobile, the admin step only appears for admins), so the tour never
+ *   actually visible (the desktop-only Lost & Found link is skipped on
+ *   mobile, the admin step only appears for admins), so the tour never
  *   points at something the user can't see.
  */
 
@@ -29,11 +40,11 @@ export const TOUR_STORAGE_KEY = "marketplaceTourDone";
 
 const TourContext = createContext(null);
 
+const ACCENT = "#FF5A1F";
+
 /* ------------------------------------------------------------------ */
 /* Steps                                                               */
 /* ------------------------------------------------------------------ */
-
-const ACCENT = "#FF5A1F";
 
 /** True when the target exists and is actually rendered (not display:none). */
 const isVisible = (selector) => {
@@ -47,16 +58,13 @@ const buildSteps = (isAdmin) => {
     {
       target: "body",
       placement: "center",
-      disableBeacon: true,
       title: "Welcome to the marketplace 👋",
       content:
         "This is your campus home for buying, selling, and recovering lost items. Here's a quick 60-second tour of everything you can do — you can replay it anytime from the footer.",
-      styles: { overlay: { backdropFilter: "blur(4px)" } },
     },
     {
       target: '[data-tour="search"]',
       placement: "bottom",
-      disableBeacon: true,
       title: "Search everything",
       content:
         "Find listings, sellers, and categories instantly. Suggestions appear as you type — use the arrow keys and Enter to jump straight to a result.",
@@ -64,7 +72,6 @@ const buildSteps = (isAdmin) => {
     {
       target: '[data-tour="categories"]',
       placement: "bottom",
-      disableBeacon: true,
       title: "Browse by category",
       content:
         "Tap a pill to filter the marketplace by category. Combine it with the type and pickup-location filters to narrow things down even further.",
@@ -72,7 +79,6 @@ const buildSteps = (isAdmin) => {
     {
       target: '[data-tour="create-listing"]',
       placement: "bottom",
-      disableBeacon: true,
       title: "Post a listing",
       content:
         "Ready to sell? Add photos, a price, condition, and a campus pickup spot. Your followers are notified the moment your listing goes live.",
@@ -80,7 +86,6 @@ const buildSteps = (isAdmin) => {
     {
       target: '[data-tour="lost-found"]',
       placement: "bottom",
-      disableBeacon: true,
       title: "Lost & Found",
       content:
         "Lost something on campus — or found someone else's stuff? Post it here with photos and a last-seen location so it can find its way home.",
@@ -88,7 +93,6 @@ const buildSteps = (isAdmin) => {
     {
       target: '[data-tour="save-listing"]',
       placement: "bottom",
-      disableBeacon: true,
       title: "Save your favorites",
       content:
         "Tap the heart on any listing to save it to your wishlist — you can even organize saves into collections and get notified when a price drops.",
@@ -96,7 +100,6 @@ const buildSteps = (isAdmin) => {
     {
       target: '[data-tour="notifications"]',
       placement: "bottom",
-      disableBeacon: true,
       title: "Notifications",
       content:
         "Offers, price drops, new listings from sellers you follow, achievements — everything lands here so you never miss a beat.",
@@ -104,7 +107,6 @@ const buildSteps = (isAdmin) => {
     {
       target: '[data-tour="profile"]',
       placement: "bottom",
-      disableBeacon: true,
       title: "Your profile menu",
       content:
         "Open this menu to reach your public profile, your listings, saved items, offers, analytics, and account settings.",
@@ -115,7 +117,6 @@ const buildSteps = (isAdmin) => {
     steps.push({
       target: '[data-tour="profile"]',
       placement: "bottom",
-      disableBeacon: true,
       title: "Admin panel",
       content:
         "As an admin, this menu also holds the Admin Panel — moderate listings and reports, manage users, locations, achievements, and site settings.",
@@ -125,11 +126,9 @@ const buildSteps = (isAdmin) => {
   steps.push({
     target: '[data-tour="navbar"]',
     placement: "bottom",
-    disableBeacon: true,
     title: "You're all set 🎉",
     content:
       "The navigation bar keeps everything one tap away wherever you are. Happy trading — and remember to meet in safe, public campus spots!",
-    styles: { overlay: { backdropFilter: "blur(4px)" } },
   });
 
   // Skip steps whose target isn't currently visible (mobile layouts,
@@ -147,7 +146,6 @@ export function TourProvider({ children }) {
   const location = useLocation();
 
   const [run, setRun] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
   const [steps, setSteps] = useState([]);
   const pendingStart = useRef(false);
 
@@ -171,8 +169,10 @@ export function TourProvider({ children }) {
   const begin = useCallback(() => {
     const built = buildSteps(isAdmin);
     if (!built.length) return;
+    // Start from the top so the first (centered) step and the navbar
+    // targets are measured from a settled scroll position.
+    window.scrollTo({ top: 0, behavior: "auto" });
     setSteps(built);
-    setStepIndex(0);
     setRun(true);
   }, [isAdmin]);
 
@@ -222,24 +222,19 @@ export function TourProvider({ children }) {
     }
   }, [user, profile, location.pathname, run, hasCompleted, begin]);
 
-  const handleCallback = useCallback(
+  // v3 emits events through `onEvent`. The tour is uncontrolled, so the
+  // only thing we manage is the end of the tour: persist completion for
+  // Finish, Skip, and the close (X) button alike, then stop rendering.
+  const handleEvent = useCallback(
     (data) => {
-      const { action, index, status, type } = data;
-
-      if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      if (data.type === EVENTS.TOUR_END) {
         setRun(false);
-        setStepIndex(0);
-        markDone();
-        return;
-      }
-      if (action === ACTIONS.CLOSE) {
-        setRun(false);
-        setStepIndex(0);
-        markDone();
-        return;
-      }
-      if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
-        setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+        if (
+          data.status === STATUS.FINISHED ||
+          data.status === STATUS.SKIPPED
+        ) {
+          markDone();
+        }
       }
     },
     [markDone]
@@ -254,30 +249,34 @@ export function TourProvider({ children }) {
         <Joyride
           run={run}
           steps={steps}
-          stepIndex={stepIndex}
-          callback={handleCallback}
+          onEvent={handleEvent}
           continuous
-          showSkipButton
-          showProgress
-          disableOverlayClose
-          scrollOffset={120}
-          spotlightPadding={8}
+          options={{
+            skipBeacon: true,
+            showProgress: true,
+            buttons: ["back", "skip", "primary"],
+            closeButtonAction: "skip",
+            overlayClickAction: false,
+            scrollOffset: 120,
+            spotlightPadding: 8,
+            spotlightRadius: 12,
+            primaryColor: ACCENT,
+            overlayColor: "rgba(10, 10, 10, 0.55)",
+            backgroundColor: "#ffffff",
+            arrowColor: "#ffffff",
+            textColor: "#111827",
+            width: 380,
+            zIndex: 10000,
+          }}
           locale={{
             back: "Previous",
             close: "Close",
             last: "Finish",
             next: "Next",
+            nextWithProgress: "Next ({current}/{total})",
             skip: "Skip tour",
           }}
           styles={{
-            options: {
-              arrowColor: "#ffffff",
-              backgroundColor: "#ffffff",
-              overlayColor: "rgba(10, 10, 10, 0.65)",
-              primaryColor: ACCENT,
-              textColor: "#111827",
-              zIndex: 10000,
-            },
             tooltip: {
               borderRadius: 16,
               padding: "20px 20px 14px",
@@ -297,7 +296,7 @@ export function TourProvider({ children }) {
               padding: "10px 0 4px",
               textAlign: "left",
             },
-            buttonNext: {
+            buttonPrimary: {
               backgroundColor: ACCENT,
               borderRadius: 9999,
               padding: "8px 18px",
@@ -313,9 +312,6 @@ export function TourProvider({ children }) {
             buttonSkip: {
               color: "#9CA3AF",
               fontSize: 13,
-            },
-            spotlight: {
-              borderRadius: 12,
             },
           }}
         />
